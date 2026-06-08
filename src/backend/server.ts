@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express, { NextFunction, Request, Response } from 'express';
+import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { upload } from '../../lib/cloudinary.js';
@@ -191,7 +192,12 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
 // Express app + routes
 // -------------------------
 const app = express();
+app.use(cors());
 app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.send('Backend is running');
+});
 
 app.get('/api/health', (_req, res) => res.status(200).json({ ok: true }));
 
@@ -1022,7 +1028,7 @@ app.post('/api/reviews/:targetId', requireAuth, async (req: Request, res: Respon
 // Bootstrap
 // -------------------------
 async function bootstrap() {
-  const port = Number(process.env.PORT ?? 4000);
+  const port = process.env.PORT || 5000;
   await connectToDatabase();
 
   const httpServer = http.createServer(app);
