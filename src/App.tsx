@@ -38,6 +38,16 @@ function readStoredAuth(): StoredAuth | null {
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
+  const [isTranslateOn, setIsTranslateOn] = useState(() => localStorage.getItem('isTranslateOn') === 'true');
+
+  const toggleTranslate = () => {
+    setIsTranslateOn(prev => {
+      const next = !prev;
+      localStorage.setItem('isTranslateOn', String(next));
+      return next;
+    });
+  };
+
   useEffect(() => {
     const stored = readStoredAuth();
     if (stored?.user) {
@@ -49,9 +59,9 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage auth={authValue} />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/login" element={<LoginPage auth={authValue} isTranslateOn={isTranslateOn} onToggleTranslate={toggleTranslate} />} />
+      <Route path="/signup" element={<SignupPage isTranslateOn={isTranslateOn} onToggleTranslate={toggleTranslate} />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage isTranslateOn={isTranslateOn} onToggleTranslate={toggleTranslate} />} />
 
       <Route
         path="/"
@@ -60,7 +70,13 @@ export default function App() {
             {user?.role === 'ADMIN' ? (
               <Navigate to="/admin" replace />
             ) : (
-              <AppShell user={user!} onLogout={() => setUser(null)} onUpdateUser={setUser} />
+              <AppShell
+                user={user!}
+                onLogout={() => setUser(null)}
+                onUpdateUser={setUser}
+                isTranslateOn={isTranslateOn}
+                onToggleTranslate={toggleTranslate}
+              />
             )}
           </ProtectedRoute>
         }
@@ -91,7 +107,15 @@ function AdminRoute({ user, children }: { user: User | null; children: ReactNode
   return <>{children}</>;
 }
 
-function LoginPage({ auth }: { auth: { user: User | null; setUser: (u: User | null) => void } }) {
+function LoginPage({
+  auth,
+  isTranslateOn,
+  onToggleTranslate
+}: {
+  auth: { user: User | null; setUser: (u: User | null) => void };
+  isTranslateOn: boolean;
+  onToggleTranslate: () => void;
+}) {
   const navigate = useNavigate();
   const location = useLocation();
   const successMessage =
@@ -154,6 +178,8 @@ function LoginPage({ auth }: { auth: { user: User | null; setUser: (u: User | nu
             onSignup={() => navigate('/signup')}
             onForgotPassword={() => navigate('/forgot-password')}
             successMessage={successMessage}
+            isTranslateOn={isTranslateOn}
+            onToggleTranslate={onToggleTranslate}
           />
         </motion.div>
       </AnimatePresence>
@@ -161,7 +187,13 @@ function LoginPage({ auth }: { auth: { user: User | null; setUser: (u: User | nu
   );
 }
 
-function SignupPage() {
+function SignupPage({
+  isTranslateOn,
+  onToggleTranslate
+}: {
+  isTranslateOn: boolean;
+  onToggleTranslate: () => void;
+}) {
   const navigate = useNavigate();
 
   const handleSignup = async (input: { fullName: string; email: string; password: string }) => {
@@ -183,14 +215,25 @@ function SignupPage() {
           transition={{ duration: 0.3 }}
           className="h-full"
         >
-          <SignupView onBack={() => navigate('/login')} onSignup={handleSignup} />
+          <SignupView
+            onBack={() => navigate('/login')}
+            onSignup={handleSignup}
+            isTranslateOn={isTranslateOn}
+            onToggleTranslate={onToggleTranslate}
+          />
         </motion.div>
       </AnimatePresence>
     </div>
   );
 }
 
-function ForgotPasswordPage() {
+function ForgotPasswordPage({
+  isTranslateOn,
+  onToggleTranslate
+}: {
+  isTranslateOn: boolean;
+  onToggleTranslate: () => void;
+}) {
   const navigate = useNavigate();
 
   return (
@@ -204,7 +247,11 @@ function ForgotPasswordPage() {
           transition={{ duration: 0.3 }}
           className="h-full"
         >
-          <ResetPasswordView onBack={() => navigate('/login')} />
+          <ResetPasswordView
+            onBack={() => navigate('/login')}
+            isTranslateOn={isTranslateOn}
+            onToggleTranslate={onToggleTranslate}
+          />
         </motion.div>
       </AnimatePresence>
     </div>
@@ -215,12 +262,16 @@ function AppShell({
   user, 
   initialView = View.FEED,
   onLogout,
-  onUpdateUser
+  onUpdateUser,
+  isTranslateOn,
+  onToggleTranslate
 }: { 
   user: User; 
   initialView?: View;
   onLogout?: () => void;
   onUpdateUser?: (user: User) => void;
+  isTranslateOn: boolean;
+  onToggleTranslate: () => void;
 }) {
   const [currentView, setCurrentView] = useState<View>(initialView);
   const [selectedBuddyId, setSelectedBuddyId] = useState<string | null>(null);
@@ -240,15 +291,15 @@ function AppShell({
       <div className="flex h-screen overflow-hidden">
         <div className="flex-1 overflow-y-auto">
           {currentView === View.FEED && (
-            <FeedView user={user} onNavigate={setCurrentView} onSelectBuddy={navigateToBuddy} onLogout={onLogout} />
+            <FeedView user={user} onNavigate={setCurrentView} onSelectBuddy={navigateToBuddy} onLogout={onLogout} isTranslateOn={isTranslateOn} onToggleTranslate={onToggleTranslate} />
           )}
           {currentView === View.BUDDIES && (
-            <BuddiesView user={user} onNavigate={setCurrentView} onSelectBuddy={navigateToBuddy} onStartChat={navigateToChat} onLogout={onLogout} />
+            <BuddiesView user={user} onNavigate={setCurrentView} onSelectBuddy={navigateToBuddy} onStartChat={navigateToChat} onLogout={onLogout} isTranslateOn={isTranslateOn} onToggleTranslate={onToggleTranslate} />
           )}
-          {currentView === View.MESSAGES && <MessagesView user={user} onNavigate={setCurrentView} onLogout={onLogout} initialChatId={selectedBuddyId} />}
-          {currentView === View.EVENTS && <EventsView user={user} onNavigate={setCurrentView} onLogout={onLogout} />}
+          {currentView === View.MESSAGES && <MessagesView user={user} onNavigate={setCurrentView} onLogout={onLogout} initialChatId={selectedBuddyId} isTranslateOnProp={isTranslateOn} onToggleTranslateProp={onToggleTranslate} />}
+          {currentView === View.EVENTS && <EventsView user={user} onNavigate={setCurrentView} onLogout={onLogout} isTranslateOn={isTranslateOn} onToggleTranslate={onToggleTranslate} />}
           {currentView === View.PROFILE_SETTINGS && (
-            <ProfileSettingsView user={user} onNavigate={setCurrentView} onLogout={onLogout} onUpdateUser={onUpdateUser} />
+            <ProfileSettingsView user={user} onNavigate={setCurrentView} onLogout={onLogout} onUpdateUser={onUpdateUser} isTranslateOn={isTranslateOn} onToggleTranslate={onToggleTranslate} />
           )}
           {currentView === View.BUDDY_PROFILE && selectedBuddyId && (
             <BuddyProfileView
@@ -256,9 +307,19 @@ function AppShell({
               onBack={() => setCurrentView(View.FEED)}
               onNavigate={setCurrentView}
               onLogout={onLogout}
+              isTranslateOn={isTranslateOn}
+              onToggleTranslate={onToggleTranslate}
             />
           )}
-          {currentView === View.REVIEW && <ReviewView buddyId={selectedBuddyId!} onSuccess={() => setCurrentView(View.BUDDY_PROFILE)} onBack={() => setCurrentView(View.BUDDY_PROFILE)} />}
+          {currentView === View.REVIEW && (
+            <ReviewView
+              buddyId={selectedBuddyId!}
+              onSuccess={() => setCurrentView(View.BUDDY_PROFILE)}
+              onBack={() => setCurrentView(View.BUDDY_PROFILE)}
+              isTranslateOn={isTranslateOn}
+              onToggleTranslate={onToggleTranslate}
+            />
+          )}
           {currentView === View.ADMIN_DASHBOARD && (
             <AdminDashboardView user={user} onNavigate={setCurrentView} onLogout={onLogout} />
           )}

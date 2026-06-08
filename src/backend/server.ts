@@ -84,6 +84,7 @@ const userSchema = new mongoose.Schema(
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     pendingRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     sentRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    previousRecommendations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
   { timestamps: true },
 );
@@ -151,6 +152,8 @@ const NotificationModel = mongoose.model('Notification', notificationSchema);
 // -------------------------
 type JwtPayload = { sub: string; email: string; role: 'user' | 'admin' };
 
+const activeUsers = new Map<string, number>();
+
 declare global {
   namespace Express {
     interface Request {
@@ -168,6 +171,9 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
     const payload = jwt.verify(token, getJwtSecret()) as JwtPayload;
     req.auth = payload;
+    if (payload && payload.sub) {
+      activeUsers.set(payload.sub, Date.now());
+    }
     return next();
   } catch {
     return res.status(401).json({ message: 'Invalid token.' });
@@ -225,6 +231,8 @@ app.post('/api/auth/register', async (req, res) => {
       { expiresIn: '7d' },
     );
 
+    activeUsers.set(user.id.toString(), Date.now());
+
     return res.status(201).json({
       token,
       user: {
@@ -275,6 +283,8 @@ app.post('/api/auth/login', async (req, res) => {
       { expiresIn: '7d' },
     );
 
+    activeUsers.set(user.id.toString(), Date.now());
+
     return res.status(200).json({
       token,
       user: {
@@ -320,7 +330,7 @@ app.put('/api/users/profile', requireAuth, (req, res, next) => {
 }, async (req: MulterRequest, res: Response) => {
   try {
     const userId = req.auth!.sub;
-    
+
     const user = await UserModel.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -341,7 +351,7 @@ app.put('/api/users/profile', requireAuth, (req, res, next) => {
     if (typeof livingArea === 'string') updateData.livingArea = livingArea.trim();
     if (typeof japaneseLevel === 'string') updateData.japaneseLevel = japaneseLevel.trim();
     if (typeof vietnameseLevel === 'string') updateData.vietnameseLevel = vietnameseLevel.trim();
-    
+
     if (interests !== undefined) {
       try {
         const parsedInterests = JSON.parse(interests);
@@ -396,82 +406,88 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
   res.status(200).json({ message: 'Dashboard data allowed.', auth: req.auth });
 });
 
+async function getRecommendationsList(currentUser: any, limit: number = 20) {
+  const currentNationality = currentUser.nationality || '';
+  const targetNationality = currentNationality === 'Vietnamese' ? 'Japanese' : (currentNationality === 'Japanese' ? 'Vietnamese' : '');
+  const friendsIds = currentUser.friends || [];
+
+  return await UserModel.aggregate([
+    {
+      $match: {
+        _id: { $ne: currentUser._id, $nin: friendsIds },
+        role: 'user'
+      }
+    },
+    {
+      $addFields: {
+        nationalityScore: {
+          $cond: [
+            { $eq: ["$nationality", targetNationality] },
+            30,
+            0
+          ]
+        },
+        locationScore: {
+          $cond: [
+            {
+              $and: [
+                { $ne: ["$livingArea", null] },
+                { $eq: ["$livingArea", currentUser.livingArea] }
+              ]
+            },
+            20,
+            0
+          ]
+        },
+        sharedInterestsScore: {
+          $multiply: [
+            { $size: { $setIntersection: [{ $ifNull: ["$interests", []] }, { $ifNull: [currentUser.interests, []] }] } },
+            10
+          ]
+        },
+        mutualFriendsScore: {
+          $multiply: [
+            { $size: { $setIntersection: [{ $ifNull: ["$friends", []] }, friendsIds] } },
+            15
+          ]
+        }
+      }
+    },
+    {
+      $addFields: {
+        matchScore: {
+          $add: ["$nationalityScore", "$locationScore", "$sharedInterestsScore", "$mutualFriendsScore"]
+        }
+      }
+    },
+    {
+      $sort: { matchScore: -1 }
+    },
+    {
+      $limit: limit
+    },
+    {
+      $project: {
+        password: 0
+      }
+    }
+  ]);
+}
+
 app.get('/api/users/recommendations', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.auth!.sub;
     const currentUser = await UserModel.findById(userId).lean();
-    
+
     if (!currentUser) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const currentNationality = currentUser.nationality || '';
-    const targetNationality = currentNationality === 'Vietnamese' ? 'Japanese' : (currentNationality === 'Japanese' ? 'Vietnamese' : '');
-    const friendsIds = currentUser.friends || [];
-
-    const recommendations = await UserModel.aggregate([
-      {
-        $match: {
-          _id: { $ne: currentUser._id, $nin: friendsIds },
-          role: 'user'
-        }
-      },
-      {
-        $addFields: {
-          nationalityScore: {
-            $cond: [
-              { $eq: ["$nationality", targetNationality] },
-              30,
-              0
-            ]
-          },
-          locationScore: {
-            $cond: [
-              { $and: [
-                { $ne: ["$livingArea", null] },
-                { $eq: ["$livingArea", currentUser.livingArea] }
-              ]},
-              20,
-              0
-            ]
-          },
-          sharedInterestsScore: {
-            $multiply: [
-              { $size: { $setIntersection: [{ $ifNull: ["$interests", []] }, { $ifNull: [currentUser.interests, []] }] } },
-              10
-            ]
-          },
-          mutualFriendsScore: {
-            $multiply: [
-              { $size: { $setIntersection: [{ $ifNull: ["$friends", []] }, friendsIds] } },
-              15
-            ]
-          }
-        }
-      },
-      {
-        $addFields: {
-          matchScore: {
-            $add: ["$nationalityScore", "$locationScore", "$sharedInterestsScore", "$mutualFriendsScore"]
-          }
-        }
-      },
-      {
-        $sort: { matchScore: -1 }
-      },
-      {
-        $limit: 10
-      },
-      {
-        $project: {
-          password: 0
-        }
-      }
-    ]);
+    const recommendations = await getRecommendationsList(currentUser, 20);
 
     const buddies = recommendations.map(rec => {
       const matchPercentage = Math.min(98, Math.max(40, 40 + rec.matchScore));
-      
+
       let roleLabel = 'MEMBER';
       if (rec.nationality === 'Japanese') roleLabel = 'JAPANESE NATIVE';
       else if (rec.nationality === 'Vietnamese') roleLabel = 'VIETNAMESE NATIVE';
@@ -591,13 +607,22 @@ app.get('/api/users/dashboard-stats', requireAuth, async (req: Request, res: Res
   try {
     const userId = req.auth!.sub;
     const user = await UserModel.findById(userId);
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     const activeCommunityCount = await UserModel.countDocuments({ role: 'user' });
-    const newMatchesCount = user.pendingRequests.length;
+    const friendsCount = (user.friends || []).length;
+
+    // Calculate new recommended users in the top 20
+    const recommendations = await getRecommendationsList(user, 20);
+    const currentIds = recommendations.map(rec => rec._id.toString());
+    const previousIds = ((user as any).previousRecommendations || []).map((id: any) => id.toString());
+    const newMatchesCount = currentIds.filter(id => !previousIds.includes(id)).length;
+
+    // Update previousRecommendations list in DB
+    await UserModel.updateOne({ _id: userId }, { previousRecommendations: currentIds });
 
     let nearbyUsersCount = 0;
     if (user.livingArea) {
@@ -608,7 +633,7 @@ app.get('/api/users/dashboard-stats', requireAuth, async (req: Request, res: Res
       });
     }
 
-    res.json({ activeCommunityCount, newMatchesCount, nearbyUsersCount });
+    res.json({ activeCommunityCount, newMatchesCount, nearbyUsersCount, friendsCount });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -618,7 +643,7 @@ app.get('/api/users/friends', requireAuth, async (req: Request, res: Response) =
   try {
     const userId = req.auth!.sub;
     const user = await UserModel.findById(userId).populate('friends', '_id fullName profilePicture nationality japaneseLevel vietnameseLevel');
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -630,7 +655,7 @@ app.get('/api/users/friends', requireAuth, async (req: Request, res: Response) =
       nationality: friend.nationality,
       japaneseLevel: friend.japaneseLevel,
       vietnameseLevel: friend.vietnameseLevel,
-      isOnline: Math.random() > 0.5 // Default/mock online status for now
+      isOnline: activeUsers.has(friend._id.toString()) && (Date.now() - (activeUsers.get(friend._id.toString()) || 0) < 300000)
     }));
 
     res.json({ friends });
@@ -643,7 +668,7 @@ app.get('/api/users/notifications', requireAuth, async (req: Request, res: Respo
   try {
     const userId = req.auth!.sub;
     const user = await UserModel.findById(userId).populate('pendingRequests', 'fullName profilePicture');
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -695,13 +720,13 @@ app.get('/api/admin/stats', requireAuth, requireAdmin, async (req: Request, res:
   try {
     const totalUsers = await UserModel.countDocuments({ role: 'user' });
     const activeEvents = await EventModel.countDocuments({});
-    
+
     const usersWithFriends = await UserModel.aggregate([
       { $project: { friendsCount: { $size: { $ifNull: ["$friends", []] } } } },
       { $group: { _id: null, total: { $sum: "$friendsCount" } } }
     ]);
     const newMatches = usersWithFriends.length > 0 ? Math.floor(usersWithFriends[0].total / 2) : 0;
-    
+
     const reports = 0; // Default to 0 for now as requested
 
     const recentUsers = await UserModel.find({ role: 'user' })
@@ -714,9 +739,45 @@ app.get('/api/admin/stats', requireAuth, requireAdmin, async (req: Request, res:
       text: `新規ユーザー(${u.fullName})が登録しました。`
     }));
 
+    // User growth analytics (registrations by month for the current year)
+    const currentYear = new Date().getFullYear();
+    const monthlyRegistrations = await UserModel.aggregate([
+      {
+        $match: {
+          role: 'user',
+          createdAt: {
+            $gte: new Date(`${currentYear}-01-01`),
+            $lte: new Date(`${currentYear}-12-31T23:59:59.999Z`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const usersBeforeThisYear = await UserModel.countDocuments({
+      role: 'user',
+      createdAt: { $lt: new Date(`${currentYear}-01-01`) }
+    });
+
+    const growthData = Array(12).fill(0);
+    let runningTotal = usersBeforeThisYear;
+    for (let month = 0; month < 12; month++) {
+      const monthData = monthlyRegistrations.find(item => item._id === month + 1);
+      if (monthData) {
+        runningTotal += monthData.count;
+      }
+      growthData[month] = runningTotal;
+    }
+
     res.json({
       stats: { totalUsers, activeEvents, newMatches, reports },
-      recentLogs
+      recentLogs,
+      growthData
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -746,7 +807,7 @@ app.put('/api/admin/users/:userId/status', requireAuth, requireAdmin, async (req
   try {
     const { userId } = req.params;
     const { status } = req.body;
-    
+
     if (!['active', 'banned'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
@@ -769,7 +830,7 @@ app.delete('/api/admin/users/:userId', requireAuth, requireAdmin, async (req: Re
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     // Also cleanup reviews and messages involving this user
     await ReviewModel.deleteMany({ $or: [{ reviewerId: userId }, { targetId: userId }] });
     await MessageModel.deleteMany({ $or: [{ senderId: userId }, { receiverId: userId }] });
@@ -792,7 +853,7 @@ app.post('/api/admin/events', requireAuth, requireAdmin, (req, res, next) => {
 }, async (req: MulterRequest, res: Response) => {
   try {
     const { title, description, date, location, category } = req.body;
-    
+
     if (!req.file) {
       return res.status(400).json({ message: 'Event image is required' });
     }
@@ -839,16 +900,16 @@ app.post('/api/events/:id/join', requireAuth, async (req: Request, res: Response
     const userId = req.auth!.sub;
     const { id } = req.params;
     const event = await EventModel.findById(id);
-    
+
     if (!event) return res.status(404).json({ message: 'Event not found' });
-    
+
     if (event.attendees.includes(userId as any)) {
       return res.status(400).json({ message: 'Already joined' });
     }
 
     event.attendees.push(userId as any);
     await event.save();
-    
+
     res.json({ message: 'Successfully joined the event', event });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -963,7 +1024,7 @@ app.post('/api/reviews/:targetId', requireAuth, async (req: Request, res: Respon
 async function bootstrap() {
   const port = Number(process.env.PORT ?? 4000);
   await connectToDatabase();
-  
+
   const httpServer = http.createServer(app);
   const io = new SocketIOServer(httpServer, {
     cors: {
@@ -982,14 +1043,14 @@ async function bootstrap() {
       try {
         const { senderId, receiverId, text } = data;
         const room = [senderId, receiverId].sort().join('_');
-        
+
         let translatedText = '';
         try {
           // Check if the message contains Japanese characters (Hiragana, Katakana, Kanji)
           const isJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text);
           // If Japanese, translate to Vietnamese. Otherwise, translate to Japanese.
           const targetLang = isJapanese ? 'vi' : 'ja';
-          
+
           const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
           const res = await fetch(url);
           const json = await res.json();
@@ -1030,4 +1091,3 @@ bootstrap().catch((error) => {
   console.error('Failed to start server:', error);
   process.exit(1);
 });
-

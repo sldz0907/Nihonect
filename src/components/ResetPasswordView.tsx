@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Mail, ArrowLeft, RefreshCw, Send, Globe } from 'lucide-react';
+import { Mail, ArrowLeft, RefreshCw, Send, Languages } from 'lucide-react';
 
 interface ResetPasswordViewProps {
   onBack: () => void;
+  isTranslateOn: boolean;
+  onToggleTranslate: () => void;
 }
 
-export default function ResetPasswordView({ onBack }: ResetPasswordViewProps) {
+export default function ResetPasswordView({ onBack, isTranslateOn, onToggleTranslate }: ResetPasswordViewProps) {
   const [submitted, setSubmitted] = useState(false);
+
+  const t = (ja: string, vi: string) => (isTranslateOn ? vi : ja);
 
   return (
     <div className="min-h-screen bg-[#FDFEFE] flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -22,10 +26,20 @@ export default function ResetPasswordView({ onBack }: ResetPasswordViewProps) {
         <span className="font-bold text-[#0F4186]">Nihonect</span>
       </div>
 
-      <div className="absolute top-8 right-8">
-        <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
-          <Globe className="w-5 h-5" />
-        </button>
+      <div className="absolute top-8 right-8 select-none">
+        {/* Translation Switch */}
+        <div className="flex items-center gap-2.5 bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm">
+           <Languages className="w-3.5 h-3.5 text-blue-600" />
+           <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t('自動翻訳', 'Tự động dịch')}</span>
+           <button 
+              type="button"
+              onClick={onToggleTranslate}
+              className={`w-9 h-4.5 rounded-full relative transition-all ${isTranslateOn ? 'bg-blue-600' : 'bg-slate-300'}`}
+           >
+              <div className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full transition-all ${isTranslateOn ? 'right-0.5' : 'left-0.5'}`} />
+           </button>
+           <p className="text-[8px] font-black text-blue-600 border-l border-slate-200 pl-2">JP ↔ VN</p>
+        </div>
       </div>
 
       <motion.div 
@@ -39,15 +53,15 @@ export default function ResetPasswordView({ onBack }: ResetPasswordViewProps) {
               <RefreshCw className="text-white w-7 h-7" />
             </div>
 
-            <h1 className="text-3xl font-bold text-[#0F4186] mb-4">パスワードの再設定</h1>
+            <h1 className="text-3xl font-bold text-[#0F4186] mb-4">{t('パスワードの再設定', 'Đặt lại mật khẩu')}</h1>
             <p className="text-slate-500 text-sm leading-relaxed mb-10">
-              ご登録済みのメールアドレスを入力してください。<br />
-              パスワード再設定用のリンクをお送りします。
+              {t('ご登録済みのメールアドレスを入力してください。', 'Vui lòng nhập địa chỉ email đã đăng ký.')}<br />
+              {t('パスワード再設定用のリンクをお送りします。', 'Chúng tôi sẽ gửi liên kết đặt lại mật khẩu cho bạn.')}
             </p>
 
             <div className="space-y-8">
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">メールアドレス</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">{t('メールアドレス', 'Địa chỉ email')}</label>
                 <div className="relative group">
                   <Mail className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#0F4186] transition-colors" />
                   <input 
@@ -62,7 +76,7 @@ export default function ResetPasswordView({ onBack }: ResetPasswordViewProps) {
                 onClick={() => setSubmitted(true)}
                 className="w-full py-5 bg-[#0F4186] text-white rounded-[20px] font-bold shadow-lg shadow-blue-500/20 hover:bg-[#0D3875] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3 group"
               >
-                <span>再設定リンクを送信</span>
+                <span>{t('再設定リンクを送信', 'Gửi liên kết đặt lại')}</span>
                 <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </button>
 
@@ -71,7 +85,7 @@ export default function ResetPasswordView({ onBack }: ResetPasswordViewProps) {
                 className="w-full py-4 border-2 border-slate-100 text-slate-500 rounded-[20px] font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>ログイン画面に戻る</span>
+                <span>{t('ログイン画面に戻る', 'Quay lại trang đăng nhập')}</span>
               </button>
             </div>
           </>
@@ -80,15 +94,15 @@ export default function ResetPasswordView({ onBack }: ResetPasswordViewProps) {
             <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8">
               <Send className="w-10 h-10" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">送信完了</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">{t('送信完了', 'Gửi thành công')}</h2>
             <p className="text-slate-500 mb-8">
-              メールを送信しました。記載されたリンクからパスワードを再設定してください。
+              {t('メールを送信しました。記載されたリンクからパスワードを再設定してください。', 'Đã gửi email thành công. Vui lòng kiểm tra hộp thư để đặt lại mật khẩu.')}
             </p>
             <button 
               onClick={onBack}
               className="w-full py-4 bg-[#0F4186] text-white rounded-[20px] font-bold"
             >
-              ログイン画面へ
+              {t('ログイン画面へ', 'Quay lại trang đăng nhập')}
             </button>
           </div>
         )}
@@ -101,7 +115,7 @@ export default function ResetPasswordView({ onBack }: ResetPasswordViewProps) {
       </div>
       
       <div className="absolute bottom-4 w-full text-center">
-        <p className="text-[10px] text-slate-300 uppercase tracking-widest font-medium">© 2024 NIHONECT — THE BRIDGE OF CULTURAL EXCHANGE</p>
+        <p className="text-[10px] text-slate-300 uppercase tracking-widest font-medium">{t('© 2024 NIHONECT — THE BRIDGE OF CULTURAL EXCHANGE', '© 2024 NIHONECT — CẦU NỐI GIAO LƯU VĂN HÓA')}</p>
       </div>
     </div>
   );

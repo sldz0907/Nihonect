@@ -11,7 +11,11 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboardView() {
-   const [dashboardData, setDashboardData] = useState<{stats: any, logs: any[]}>({ stats: null, logs: [] });
+   const [dashboardData, setDashboardData] = useState<{stats: any, logs: any[], growthData: number[]}>({ 
+      stats: null, 
+      logs: [], 
+      growthData: [] 
+   });
    
    useEffect(() => {
       const fetchStats = async () => {
@@ -22,7 +26,11 @@ export default function AdminDashboardView() {
             });
             if (res.ok) {
                const data = await res.json();
-               setDashboardData({ stats: data.stats, logs: data.recentLogs });
+               setDashboardData({ 
+                  stats: data.stats, 
+                  logs: data.recentLogs, 
+                  growthData: data.growthData || [] 
+               });
             }
          } catch (e) {
             console.error('Failed to fetch admin stats:', e);
@@ -100,20 +108,89 @@ export default function AdminDashboardView() {
                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">User Growth Analytics</p>
                   </div>
 
-                  {/* Mock Chart Visualization */}
-                  <div className="w-full mt-20 flex items-end gap-2 h-48 px-10">
-                     {[40, 60, 45, 80, 55, 90, 75, 100, 85, 120, 95, 140].map((h, i) => (
-                        <div key={i} className="flex-1 bg-blue-50 rounded-t-xl relative group">
-                           <div
-                              className="absolute bottom-0 left-0 w-full bg-[#0F4186] rounded-t-xl transition-all duration-1000 opacity-80 group-hover:opacity-100"
-                              style={{ height: `${h}%` }}
-                           />
-                        </div>
-                     ))}
-                  </div>
-                  <div className="w-full px-10 mt-4 flex justify-between text-[10px] font-bold text-slate-300 uppercase">
-                     <span>1月</span>
-                     <span>12月</span>
+                  {/* Real Line Chart Visualization */}
+                  <div className="w-full mt-10 h-80 flex justify-center items-center">
+                     {(() => {
+                        const growthRaw = dashboardData.growthData && dashboardData.growthData.length > 0
+                           ? dashboardData.growthData
+                           : Array(12).fill(0);
+                        
+                        const padding = { top: 20, right: 20, bottom: 25, left: 40 };
+                        const width = 600;
+                        const height = 320;
+                        const innerWidth = width - padding.left - padding.right;
+                        const innerHeight = height - padding.top - padding.bottom;
+
+                        const levels = [0, 10, 30, 50, 70, 100, 200, 1000];
+                        
+                        const getYPos = (val: number) => {
+                           if (val <= 0) return padding.top + innerHeight;
+                           if (val >= 1000) return padding.top;
+                           
+                           let lowerIdx = 0;
+                           while (lowerIdx < levels.length - 1 && levels[lowerIdx + 1] <= val) lowerIdx++;
+                           const upperIdx = lowerIdx + 1;
+                           
+                           const lowerVal = levels[lowerIdx];
+                           const upperVal = levels[upperIdx];
+                           const fraction = (val - lowerVal) / (upperVal - lowerVal);
+                           
+                           const intervalHeight = innerHeight / (levels.length - 1);
+                           const yFromBottom = (lowerIdx + fraction) * intervalHeight;
+                           return padding.top + innerHeight - yFromBottom;
+                        };
+
+                        const points = growthRaw.map((val, i) => {
+                           const x = padding.left + (i / 11) * innerWidth;
+                           const y = getYPos(val);
+                           return `${x},${y}`;
+                        }).join(' ');
+
+                        return (
+                           <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
+                              {/* Y-axis */}
+                              {levels.map(val => {
+                                 const y = getYPos(val);
+                                 return (
+                                    <g key={`y-${val}`}>
+                                       <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#f1f5f9" strokeWidth="2" strokeDasharray={val === 0 ? "0" : "4 4"} />
+                                       <text x={padding.left - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-slate-400 font-bold">{val}人</text>
+                                    </g>
+                                 );
+                              })}
+
+                              {/* X-axis labels */}
+                              {growthRaw.map((_, i) => {
+                                 const x = padding.left + (i / 11) * innerWidth;
+                                 return (
+                                    <text key={`x-${i}`} x={x} y={height - 2} textAnchor="middle" className="text-[10px] fill-slate-400 font-bold">{i + 1}月</text>
+                                 );
+                              })}
+
+                              {/* Line */}
+                              <polyline points={points} fill="none" stroke="#0F4186" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-md" />
+
+                              {/* Data Points and Tooltips */}
+                              {growthRaw.map((val, i) => {
+                                 const x = padding.left + (i / 11) * innerWidth;
+                                 const y = getYPos(val);
+                                 return (
+                                    <g key={`point-${i}`} className="group cursor-pointer">
+                                       <circle cx={x} cy={y} r="16" fill="transparent" />
+                                       <circle cx={x} cy={y} r="4" fill="white" stroke="#0F4186" strokeWidth="2.5" className="group-hover:r-5 group-hover:fill-[#0F4186] transition-all duration-300" />
+                                       
+                                       <g className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                          <rect x={x - 30} y={y - 45} width="60" height="32" rx="8" fill="#0f172a" />
+                                          <polygon points={`${x - 4},${y - 13} ${x + 4},${y - 13} ${x},${y - 8}`} fill="#0f172a" />
+                                          <text x={x} y={y - 31} textAnchor="middle" className="text-[9px] fill-slate-400 font-bold">{i + 1}月</text>
+                                          <text x={x} y={y - 19} textAnchor="middle" className="text-[11px] fill-blue-300 font-black">{val}人</text>
+                                       </g>
+                                    </g>
+                                 );
+                              })}
+                           </svg>
+                        );
+                     })()}
                   </div>
                </section>
             </div>

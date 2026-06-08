@@ -14,14 +14,65 @@ import {
 import { motion } from 'motion/react';
 import Sidebar from './shared/Sidebar';
 
+const livingAreaMap: Record<string, string> = {
+  'Ba Dinh': 'バーディン区',
+  'Hoan Kiem': 'ホアンキエム区',
+  'Hai Ba Trung': 'ハイバーチュン区',
+  'Dong Da': 'ドンダー区',
+  'Tay Ho': 'タイホー区',
+  'Cau Giay': 'カウザイ区',
+  'Thanh Xuan': 'タインスアン区',
+  'Ha Dong': 'ハドン区',
+  'Bac Tu Liem': 'バクトゥーリエム区',
+  'Nam Tu Liem': 'ナムトゥーリエム区',
+  'My Duc': 'ミーデュック県',
+  'Dan Phuong': 'ダンフォン県',
+  'Thuong Tin': 'トゥオンティン県',
+  'Hoai Duc': 'ホアイドゥック県',
+  'Quoc Oai': 'クォックオアイ県',
+  'Phu Xuyen': 'フーズエン県',
+  'Soc Son': 'ソックソン県',
+  'Me Linh': 'メーリン県'
+};
+
+const livingAreaMapVi: Record<string, string> = {
+  'Ba Dinh': 'Quận Ba Đình',
+  'Hoan Kiem': 'Quận Hoàn Kiếm',
+  'Hai Ba Trung': 'Quận Hai Bà Trưng',
+  'Dong Da': 'Quận Đống Đa',
+  'Tay Ho': 'Quận Tây Hồ',
+  'Cau Giay': 'Quận Cầu Giấy',
+  'Thanh Xuan': 'Quận Thanh Xuân',
+  'Ha Dong': 'Quận Hà Đông',
+  'Bac Tu Liem': 'Quận Bắc Từ Liêm',
+  'Nam Tu Liem': 'Quận Nam Từ Liêm',
+  'My Duc': 'Huyện Mỹ Đức',
+  'Dan Phuong': 'Huyện Đan Phượng',
+  'Thuong Tin': 'Huyện Thường Tín',
+  'Hoai Duc': 'Huyện Hoài Đức',
+  'Quoc Oai': 'Huyện Quốc Oai',
+  'Phu Xuyen': 'Huyện Phú Xuyên',
+  'Soc Son': 'Huyện Sóc Sơn',
+  'Me Linh': 'Huyện Mê Linh'
+};
+
 interface BuddyProfileViewProps {
   buddyId: string;
   onBack: () => void;
   onNavigate: (view: View) => void;
   onLogout?: () => void;
+  isTranslateOn: boolean;
+  onToggleTranslate: () => void;
 }
 
-export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout }: BuddyProfileViewProps) {
+export default function BuddyProfileView({ 
+  buddyId, 
+  onBack, 
+  onNavigate, 
+  onLogout,
+  isTranslateOn,
+  onToggleTranslate
+}: BuddyProfileViewProps) {
   const [profileData, setProfileData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -44,6 +95,8 @@ export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout
     };
     fetchProfile();
   }, [buddyId]);
+
+  const t = (ja: string, vi: string) => (isTranslateOn ? vi : ja);
 
   if (isLoading || !profileData) {
     return (
@@ -72,6 +125,19 @@ export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout
               <h1 className="text-xl font-bold text-[#0F4186]">Nihonect</h1>
            </div>
            <div className="flex items-center gap-3">
+              {/* Translation Switch */}
+              <div className="flex items-center gap-2.5 bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm select-none">
+                 <Languages className="w-3.5 h-3.5 text-blue-600" />
+                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t('自動翻訳', 'Tự động dịch')}</span>
+                 <button 
+                    type="button"
+                    onClick={onToggleTranslate}
+                    className={`w-9 h-4.5 rounded-full relative transition-all ${isTranslateOn ? 'bg-blue-600' : 'bg-slate-300'}`}
+                 >
+                    <div className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full transition-all ${isTranslateOn ? 'right-0.5' : 'left-0.5'}`} />
+                 </button>
+                 <p className="text-[8px] font-black text-blue-600 border-l border-slate-200 pl-2">JP ↔ VN</p>
+              </div>
               <button className="p-2.5 hover:bg-slate-100 rounded-full transition-colors">
                 <Share2 className="w-5 h-5 text-slate-500" />
               </button>
@@ -105,7 +171,7 @@ export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout
                   {profile.livingArea && (
                     <div className="flex items-center gap-1.5">
                       <MapPin className="w-4 h-4 text-[#0F4186]" />
-                      <span>{profile.livingArea}</span>
+                      <span>{(isTranslateOn ? livingAreaMapVi[profile.livingArea] : livingAreaMap[profile.livingArea]) || profile.livingArea}</span>
                     </div>
                   )}
                   {(profile.japaneseLevel || profile.vietnameseLevel) && (
@@ -121,14 +187,14 @@ export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout
             <div className="absolute -bottom-10 right-0 flex gap-4">
                <button className="flex items-center gap-2 px-8 py-4 bg-[#0F4186] text-white rounded-2xl font-bold shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all">
                   <Heart className="w-5 h-5 fill-current" />
-                  <span>つながる</span>
+                  <span>{t('つながる', 'Kết nối')}</span>
                </button>
                <button 
                  onClick={() => onNavigate(View.MESSAGES)}
                  className="flex items-center gap-2 px-8 py-4 bg-white border border-slate-200 text-slate-900 rounded-2xl font-bold hover:bg-slate-50 transition-all shadow-sm"
                >
                   <MessageSquare className="w-5 h-5" />
-                  <span>メッセージを送る</span>
+                  <span>{t('メッセージを送る', 'Gửi tin nhắn')}</span>
                </button>
             </div>
           </div>
@@ -139,14 +205,14 @@ export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout
                    <div className="absolute top-0 left-0 w-1.5 h-full bg-[#0F4186]/20 group-hover:bg-[#0F4186] transition-colors" />
                    <div className="flex items-center gap-3 mb-6">
                       <CircleUserIcon className="w-6 h-6 text-[#0F4186]" />
-                      <h3 className="text-xl font-bold text-slate-900">自己紹介</h3>
+                      <h3 className="text-xl font-bold text-slate-900">{t('自己紹介', 'Giới thiệu bản thân')}</h3>
                    </div>
                    <p className="text-slate-600 leading-relaxed text-lg mb-8 whitespace-pre-wrap">
-                      {profile.bio || "まだ自己紹介がありません。"}
+                      {profile.bio || t('まだ自己紹介がありません。', 'Chưa có giới thiệu bản thân.')}
                    </p>
                    {profile.interests && profile.interests.length > 0 && (
                      <div className="space-y-4">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">興味・関心</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('興味・関心', 'Sở thích / Quan tâm')}</p>
                         <div className="flex flex-wrap gap-2">
                           {profile.interests.map((tag: string, i: number) => (
                             <span key={tag} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${i === 2 ? 'bg-blue-50 text-[#0F4186] border border-blue-100' : 'bg-slate-50 text-slate-500 border border-transparent'}`}>
@@ -162,7 +228,7 @@ export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout
                    <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-3">
                          <Star className="w-6 h-6 text-amber-400 fill-amber-400" />
-                         <h3 className="text-xl font-bold text-slate-900">評価とレビュー</h3>
+                         <h3 className="text-xl font-bold text-slate-900">{t('評価とレビュー', 'Đánh giá & Nhận xét')}</h3>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-full border border-amber-100">
@@ -171,13 +237,13 @@ export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout
                             {[1, 2, 3, 4, 5].map(i => <Star key={i} className={`w-3.5 h-3.5 ${i <= profile.avgRating ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200'}`} />)}
                           </div>
                         </div>
-                        <span className="text-xs font-medium text-slate-400">({profile.reviewCount}件)</span>
+                        <span className="text-xs font-medium text-slate-400">({profile.reviewCount}{t('件', ' đánh giá')})</span>
                       </div>
                    </div>
 
                    <div className="space-y-6">
                       {reviews.length === 0 ? (
-                        <div className="text-center text-slate-400 py-4">まだレビューがありません。</div>
+                        <div className="text-center text-slate-400 py-4">{t('まだレビューがありません。', 'Chưa có đánh giá nào.')}</div>
                       ) : (
                         reviews.map((rev: any) => (
                           <div key={rev.id} className="p-6 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-200 hover:bg-white transition-all">
@@ -191,7 +257,7 @@ export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout
                                       </div>
                                    </div>
                                 </div>
-                                <span className="text-[10px] font-medium text-slate-400 uppercase">{new Date(rev.date).toLocaleDateString()}</span>
+                                <span className="text-[10px] font-medium text-slate-400 uppercase">{new Date(rev.date).toLocaleDateString(isTranslateOn ? 'vi-VN' : 'ja-JP')}</span>
                              </div>
                              <p className="text-sm text-slate-600 leading-relaxed">{rev.text}</p>
                           </div>
@@ -202,7 +268,7 @@ export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout
                          onClick={() => onNavigate(View.REVIEW)}
                          className="w-full py-4 text-sm font-bold text-[#0F4186] border-2 border-[#0F4186] rounded-2xl hover:bg-[#0F4186] hover:text-white transition-all mt-4"
                       >
-                         レビューを書く
+                         {t('レビューを書く', 'Viết đánh giá')}
                       </button>
                    </div>
                 </section>
@@ -212,13 +278,13 @@ export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout
                 <section className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm relative group overflow-hidden">
                    <div className="flex items-center gap-3 mb-8">
                       <Languages className="w-6 h-6 text-[#0F4186]" />
-                      <h3 className="text-xl font-bold text-slate-900">言語スキル</h3>
+                      <h3 className="text-xl font-bold text-slate-900">{t('言語スキル', 'Kỹ năng ngôn ngữ')}</h3>
                    </div>
                    <div className="space-y-8">
                       {profile.japaneseLevel && (
                         <div className="space-y-2">
                            <div className="flex justify-between items-end">
-                              <p className="text-sm font-bold text-slate-900">日本語</p>
+                              <p className="text-sm font-bold text-slate-900">{t('日本語', 'Tiếng Nhật')}</p>
                               <p className="text-[10px] font-black uppercase text-[#0F4186] tracking-wider">{profile.japaneseLevel}</p>
                            </div>
                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -233,7 +299,7 @@ export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout
                       {profile.vietnameseLevel && (
                         <div className="space-y-2">
                            <div className="flex justify-between items-end">
-                              <p className="text-sm font-bold text-slate-900">ベトナム語</p>
+                              <p className="text-sm font-bold text-slate-900">{t('ベトナム語', 'Tiếng Việt')}</p>
                               <p className="text-[10px] font-black uppercase text-[#0F4186] tracking-wider">{profile.vietnameseLevel}</p>
                            </div>
                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -246,18 +312,18 @@ export default function BuddyProfileView({ buddyId, onBack, onNavigate, onLogout
                         </div>
                       )}
                       {!profile.japaneseLevel && !profile.vietnameseLevel && (
-                        <p className="text-sm text-slate-400">言語スキルが設定されていません。</p>
+                        <p className="text-sm text-slate-400">{t('言語スキルが設定されていません。', 'Chưa thiết lập kỹ năng ngôn ngữ.')}</p>
                       )}
                    </div>
                 </section>
 
                 <div className="bg-[#0F4186] p-8 rounded-[32px] text-white shadow-xl shadow-blue-500/20 relative overflow-hidden group">
-                  <div className="relative z-10">
-                    <Award className="w-12 h-12 mb-6 text-blue-200/50" />
-                    <h4 className="text-xl font-bold mb-2">コミュニティメンバー</h4>
-                    <p className="text-blue-100/60 text-sm mb-6">コミュニティに参加して、言語交換を楽しんでいます。</p>
-                  </div>
-                  <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
+                   <div className="relative z-10">
+                     <Award className="w-12 h-12 mb-6 text-blue-200/50" />
+                     <h4 className="text-xl font-bold mb-2">{t('コミュニティメンバー', 'Thành viên cộng đồng')}</h4>
+                     <p className="text-blue-100/60 text-sm mb-6">{t('コミュニティに参加して、言語交換を楽しんでいます。', 'Tham gia cộng đồng và tận hưởng việc học hỏi ngôn ngữ.')}</p>
+                   </div>
+                   <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
                 </div>
              </div>
           </div>

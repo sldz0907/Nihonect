@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User } from '../types';
 import { Trash2, Ban, CheckCircle, Search, Filter } from 'lucide-react';
 
@@ -6,6 +6,19 @@ export default function AdminUserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'banned'>('all');
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
+        setIsFilterDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -67,10 +80,19 @@ export default function AdminUserManagement() {
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const nameMatch = 
+      u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      u.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const statusMatch = 
+      statusFilter === 'all' || 
+      (statusFilter === 'active' && u.status !== 'banned') || 
+      (statusFilter === 'banned' && u.status === 'banned');
+      
+    return nameMatch && statusMatch;
+  });
 
   return (
     <div className="p-10 max-w-6xl mx-auto">
@@ -91,10 +113,77 @@ export default function AdminUserManagement() {
               className="w-72 pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:border-[#0F4186] outline-none transition-all text-sm font-medium shadow-sm"
             />
           </div>
-          <button className="flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
-            <Filter className="w-4 h-4" />
-            <span>絞り込み</span>
-          </button>
+          
+          <div className="relative" ref={filterDropdownRef}>
+            <button 
+              onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+              className={`flex items-center gap-2 px-5 py-3 border rounded-2xl text-sm font-bold transition-all shadow-sm ${
+                statusFilter !== 'all' 
+                  ? 'bg-[#0F4186]/10 border-[#0F4186]/20 text-[#0F4186] hover:bg-[#0F4186]/20' 
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <Filter className="w-4 h-4" />
+              <span>
+                {statusFilter === 'all' && '絞り込み'}
+                {statusFilter === 'active' && 'ステータス: 有効'}
+                {statusFilter === 'banned' && 'ステータス: 凍結中'}
+              </span>
+            </button>
+
+            {isFilterDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 py-2">
+                  ステータス
+                </div>
+                <button
+                  onClick={() => {
+                    setStatusFilter('all');
+                    setIsFilterDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-between ${
+                    statusFilter === 'all' ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                    すべて
+                  </span>
+                  {statusFilter === 'all' && <CheckCircle className="w-4 h-4 text-slate-600" />}
+                </button>
+                <button
+                  onClick={() => {
+                    setStatusFilter('active');
+                    setIsFilterDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-between ${
+                    statusFilter === 'active' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    有効 (Active)
+                  </span>
+                  {statusFilter === 'active' && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                </button>
+                <button
+                  onClick={() => {
+                    setStatusFilter('banned');
+                    setIsFilterDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-between ${
+                    statusFilter === 'banned' ? 'bg-rose-50 text-rose-700' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                    凍結中 (Banned)
+                  </span>
+                  {statusFilter === 'banned' && <CheckCircle className="w-4 h-4 text-rose-600" />}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

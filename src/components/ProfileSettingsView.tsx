@@ -1,6 +1,6 @@
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
 import { User, View, DEFAULT_AVATAR } from '../types';
-import { Camera, ChevronDown, Check } from 'lucide-react';
+import { Camera, ChevronDown, Check, Languages } from 'lucide-react';
 import Sidebar from './shared/Sidebar';
 import NotificationBell from './shared/NotificationBell';
 
@@ -9,10 +9,21 @@ interface ProfileSettingsViewProps {
   onNavigate: (view: View) => void;
   onLogout?: () => void;
   onUpdateUser?: (user: User) => void;
+  isTranslateOn: boolean;
+  onToggleTranslate: () => void;
 }
 
-export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpdateUser }: ProfileSettingsViewProps) {
-  const interestOptions = ['文化', 'グルメ', 'IT交流', '言語交換', '格闘技', '伝統音楽', 'スタートアップ', 'ハイキング'];
+export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpdateUser, isTranslateOn, onToggleTranslate }: ProfileSettingsViewProps) {
+  const interestOptions = [
+    { ja: '文化', vi: 'Văn hóa' },
+    { ja: 'グルメ', vi: 'Ẩm thực' },
+    { ja: 'IT交流', vi: 'Giao lưu IT' },
+    { ja: '言語交換', vi: 'Trao đổi ngôn ngữ' },
+    { ja: '格闘技', vi: 'Võ thuật' },
+    { ja: '伝統音楽', vi: 'Âm nhạc truyền thống' },
+    { ja: 'スタートアップ', vi: 'Khởi nghiệp' },
+    { ja: 'ハイキング', vi: 'Leo núi' }
+  ];
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [fullName, setFullName] = useState(user.name ?? '');
@@ -28,6 +39,8 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const t = (ja: string, vi: string) => (isTranslateOn ? vi : ja);
+
   useEffect(() => {
     setFullName(user.name ?? '');
     setBio(user.bio ?? '');
@@ -42,11 +55,11 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
     setErrorMessage(null);
   }, [user]);
 
-  const handleInterestToggle = (interest: string) => {
+  const handleInterestToggle = (interestJa: string) => {
     setSelectedInterests((current) =>
-      current.includes(interest)
-        ? current.filter((item) => item !== interest)
-        : [...current, interest],
+      current.includes(interestJa)
+        ? current.filter((item) => item !== interestJa)
+        : [...current, interestJa],
     );
   };
 
@@ -56,6 +69,19 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
     setImageFile(file);
     setRemoveProfilePicture(false);
     setPreviewImage(URL.createObjectURL(file));
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setRemoveProfilePicture(true);
+    setPreviewImage(DEFAULT_AVATAR);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleCancel = () => {
@@ -92,22 +118,10 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
         formData.append('removeProfilePicture', 'true');
       }
 
-      // Debug: log FormData
-      console.log('FormData entries:');
-      formData.forEach((value, key) => {
-        if (value instanceof File) {
-          console.log(`  ${key}: [File] ${value.name} (${value.size} bytes)`);
-        } else {
-          console.log(`  ${key}: ${value}`);
-        }
-      });
-
       const token = localStorage.getItem('authToken');
       if (!token) {
-        throw new Error('認証トークンが見つかりません。もう一度ログインしてください。');
+        throw new Error(t('認証トークンが見つかりません。もう一度ログインしてください。', 'Không tìm thấy mã xác thực. Vui lòng đăng nhập lại.'));
       }
-
-      console.log('Sending PUT request to /api/users/profile with token:', token.substring(0, 20) + '...');
 
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
@@ -117,30 +131,24 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
         body: formData,
       });
 
-      console.log('Response status:', response.status, response.statusText);
-
-      // Check if response is empty or not JSON
       const responseText = await response.text();
-      console.log('Response text:', responseText.substring(0, 100));
       
       if (!responseText) {
-        throw new Error('サーバーからの応答がありません。しばらく待ってからもう一度お試しください。');
+        throw new Error(t('サーバーからの応答がありません。しばらく待ってからもう一度お試しください。', 'Không có phản hồi từ máy chủ. Vui lòng thử lại sau.'));
       }
 
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
-        console.error('JSON parse error:', parseError);
-        console.error('Response text:', responseText);
-        throw new Error('サーバーからの応答が無効です。管理者に報告してください。');
+        throw new Error(t('サーバーからの応答が無効です。管理者に報告してください。', 'Phản hồi từ máy chủ không hợp lệ. Vui lòng báo cáo với quản trị viên.'));
       }
 
       if (!response.ok) {
-        throw new Error(data.error || data.message || 'プロフィールの保存に失敗しました。');
+        throw new Error(data.error || data.message || t('プロフィールの保存に失敗しました。', 'Lưu hồ sơ thất bại.'));
       }
 
-      setMessage('プロフィールが正常に保存されました。');
+      setMessage(t('プロフィールが正常に保存されました。', 'Cập nhật hồ sơ thành công.'));
       setErrorMessage(null);
       
       if (data.user) {
@@ -173,20 +181,10 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
       }
     } catch (error: any) {
       console.error('Profile update error:', error);
-      setErrorMessage(error.message || 'プロフィールの保存中にエラーが発生しました。');
+      setErrorMessage(error.message || t('プロフィールの保存中にエラーが発生しました。', 'Đã xảy ra lỗi trong quá trình lưu hồ sơ.'));
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setRemoveProfilePicture(true);
-    setPreviewImage(DEFAULT_AVATAR);
   };
 
   return (
@@ -195,6 +193,19 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
       
       <div className="flex-1 overflow-y-auto">
         <header className="sticky top-0 z-30 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-4 flex items-center justify-end gap-4 border-b border-slate-100">
+           {/* Translation Switch */}
+           <div className="flex items-center gap-2.5 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+              <Languages className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t('自動翻訳', 'Tự động dịch')}</span>
+              <button 
+                 type="button"
+                 onClick={onToggleTranslate}
+                 className={`w-9 h-4.5 rounded-full relative transition-all ${isTranslateOn ? 'bg-blue-600' : 'bg-slate-300'}`}
+              >
+                 <div className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full transition-all ${isTranslateOn ? 'right-0.5' : 'left-0.5'}`} />
+              </button>
+              <p className="text-[8px] font-black text-blue-600 border-l border-slate-200 pl-2">JP ↔ VN</p>
+           </div>
            <NotificationBell />
            <button className="flex items-center gap-3 pl-3 pr-1 py-1 bg-white border border-slate-200 rounded-full hover:border-[#0F4186] transition-all group">
               <span className="text-xs font-bold text-slate-700">{user.name}</span>
@@ -204,8 +215,8 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
 
         <main className="max-w-3xl mx-auto p-12">
            <div className="mb-12">
-              <h1 className="text-4xl font-extrabold text-[#0F4186] mb-2 tracking-tight">こんにちは、{user.name}さん！</h1>
-              <p className="text-slate-500 font-medium">日本とベトナムのコミュニティとの繋がりを深めるために、プロフィールを更新してください。</p>
+              <h1 className="text-4xl font-extrabold text-[#0F4186] mb-2 tracking-tight">{t(`こんにちは、${user.name}さん！`, `Xin chào, ${user.name}!`)}</h1>
+              <p className="text-slate-500 font-medium">{t('日本とベトナムのコミュニティとの繋がりを深めるために、プロフィールを更新してください。', 'Hãy cập nhật hồ sơ của bạn để thắt chặt kết nối với cộng đồng Nhật - Việt.')}</p>
            </div>
 
            <form onSubmit={handleSubmit} className="space-y-8">
@@ -215,21 +226,21 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
                     <div className="relative">
                        <img
                          src={previewImage || DEFAULT_AVATAR}
-                         alt="プロフィールプレビュー"
+                         alt={t('プロフィールプレビュー', 'Xem trước ảnh đại diện')}
                          className="w-32 h-32 rounded-[40px] object-cover border-4 border-slate-50 shadow-xl shadow-blue-500/5 bg-slate-100"
                        />
                     </div>
                     <div className="flex-1">
-                       <h3 className="text-lg font-extrabold text-slate-900 mb-2">プロフィール写真</h3>
+                       <h3 className="text-lg font-extrabold text-slate-900 mb-2">{t('プロフィール写真', 'Ảnh hồ sơ')}</h3>
                        <p className="text-xs text-slate-400 font-medium leading-relaxed mb-6">
-                          顔がはっきりとわかる写真をアップロードしてください。PNG, JPG形式。最大5MBまで。
+                          {t('顔がはっきりとわかる写真をアップロードしてください。PNG, JPG形式。最大5MBまで。', 'Vui lòng tải lên ảnh chụp rõ mặt. Định dạng PNG, JPG. Tối đa 5MB.')}
                        </p>
                        <div className="flex gap-3">
-                          <button type="button" onClick={handleUploadClick} className="px-6 py-2.5 bg-[#0F4186] text-white text-[11px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-blue-500/20 hover:-translate-y-0.5 transition-all">画像をアップロード</button>
-                          <button type="button" onClick={handleRemoveImage} className="px-6 py-2.5 bg-slate-50 text-slate-400 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-100 transition-all">削除</button>
+                          <button type="button" onClick={handleUploadClick} className="px-6 py-2.5 bg-[#0F4186] text-white text-[11px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-blue-500/20 hover:-translate-y-0.5 transition-all">{t('画像をアップロード', 'Tải ảnh lên')}</button>
+                          <button type="button" onClick={handleRemoveImage} className="px-6 py-2.5 bg-slate-50 text-slate-400 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-100 transition-all">{t('削除', 'Xóa')}</button>
                        </div>
                        <div className="text-xs text-slate-400 mt-3">
-                         {imageFile ? `選択中: ${imageFile.name}` : previewImage ? '現在のプロフィール画像' : '画像が選択されていません'}
+                          {imageFile ? t(`選択中: ${imageFile.name}`, `Đang chọn: ${imageFile.name}`) : previewImage ? t('現在のプロフィール画像', 'Ảnh hồ sơ hiện tại') : t('画像が選択されていません', 'Chưa chọn ảnh nào')}
                        </div>
                        <input
                          ref={fileInputRef}
@@ -245,7 +256,7 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
               {/* Full Name */}
               <section className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm">
                  <div className="mb-6">
-                    <h3 className="text-lg font-extrabold text-slate-900 mb-1">氏名</h3>
+                    <h3 className="text-lg font-extrabold text-slate-900 mb-1">{t('氏名', 'Họ tên')}</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Full Name / Họ tên</p>
                  </div>
                  <input
@@ -253,7 +264,7 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="w-full p-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none focus:bg-white focus:border-[#0F4186] transition-all text-sm font-medium placeholder:text-slate-300"
-                    placeholder="氏名を入力してください"
+                    placeholder={t('氏名を入力してください', 'Vui lòng nhập họ tên')}
                  />
               </section>
 
@@ -261,7 +272,7 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
               <section className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm">
                  <div className="flex justify-between items-center mb-6">
                     <div>
-                       <h3 className="text-lg font-extrabold text-slate-900 mb-1">自己紹介</h3>
+                       <h3 className="text-lg font-extrabold text-slate-900 mb-1">{t('自己紹介', 'Giới thiệu bản thân')}</h3>
                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Bio / Giới thiệu bản thân</p>
                     </div>
                     <span className="text-[10px] font-black text-slate-300 uppercase">{bio.length}/300</span>
@@ -271,14 +282,14 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
                     onChange={(e) => setBio(e.target.value)}
                     maxLength={300}
                     className="w-full h-40 p-6 bg-slate-50 border-2 border-transparent rounded-4xl outline-none focus:bg-white focus:border-[#0F4186] transition-all text-sm font-medium placeholder:text-slate-300 resize-none"
-                    placeholder="日本やベトナムとの関わりについて教えてください..."
+                    placeholder={t('日本やベトナムとの関わりについて教えてください...', 'Hãy chia sẻ về mối quan hệ của bạn với Nhật Bản hoặc Việt Nam...')}
                  />
               </section>
 
               {/* Residence Area */}
               <section className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm">
                  <div className="mb-6">
-                    <h3 className="text-lg font-extrabold text-slate-900 mb-1">ハノイの居住エリア</h3>
+                    <h3 className="text-lg font-extrabold text-slate-900 mb-1">{t('ハノイの居住エリア', 'Khu vực cư trú tại Hà Nội')}</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Living Area in Hanoi / Khu vực sinh sống tại Hà Nội</p>
                  </div>
                  <div className="relative group">
@@ -287,25 +298,25 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
                       onChange={(e) => setLivingArea(e.target.value)}
                       className="w-full pl-6 pr-12 py-5 bg-slate-50 border-2 border-transparent rounded-3xl outline-none focus:bg-white focus:border-[#0F4186] transition-all text-sm font-bold text-slate-700 appearance-none cursor-pointer"
                     >
-                       <option value="">選択してください</option>
-                       <option value="Ba Dinh">バーディン区 (Ba Đình)</option>
-                       <option value="Hoan Kiem">ホアンキエム区 (Hoàn Kiếm)</option>
-                       <option value="Hai Ba Trung">ハイバーチュン区 (Hai Bà Trưng)</option>
-                       <option value="Dong Da">ドンダー区 (Đống Đa)</option>
-                       <option value="Tay Ho">タイホー区 (Tây Hồ)</option>
-                       <option value="Cau Giay">カウザイ区 (Cầu Giấy)</option>
-                       <option value="Thanh Xuan">タインスアン区 (Thanh Xuân)</option>
-                       <option value="Ha Dong">ハドン区 (Hà Đông)</option>
-                       <option value="Bac Tu Liem">バクトゥーリエム区 (Bắc Từ Liêm)</option>
-                       <option value="Nam Tu Liem">ナムトゥーリエム区 (Nam Từ Liêm)</option>
-                       <option value="My Duc">ミーデュック県 (Mỹ Đức)</option>
-                       <option value="Dan Phuong">ダンフォン県 (Dân Phương)</option>
-                       <option value="Thuong Tin">トゥオンティン県 (Thượng Tín)</option>
-                       <option value="Hoai Duc">ホアイドゥック県 (Hoài Đức)</option>
-                       <option value="Quoc Oai">クォックオアイ県 (Quốc Oai)</option>
-                       <option value="Phu Xuyen">フーズエン県 (Phú Xuyên)</option>
-                       <option value="Soc Son">ソックソン県 (Sóc Sơn)</option>
-                       <option value="Me Linh">メーリン県 (Mê Linh)</option>
+                       <option value="">{t('選択してください', 'Vui lòng chọn')}</option>
+                       <option value="Ba Dinh">{t('バーディン区 (Ba Đình)', 'Quận Ba Đình (Ba Đình)')}</option>
+                       <option value="Hoan Kiem">{t('ホアンキエム区 (Hoàn Kiếm)', 'Quận Hoàn Kiếm (Hoàn Kiếm)')}</option>
+                       <option value="Hai Ba Trung">{t('ハイバーチュン区 (Hai Bà Trưng)', 'Quận Hai Bà Trưng (Hai Bà Trưng)')}</option>
+                       <option value="Dong Da">{t('ドンダー区 (Đống Đa)', 'Quận Đống Đa (Đống Đa)')}</option>
+                       <option value="Tay Ho">{t('タイホー区 (Tây Hồ)', 'Quận Tây Hồ (Tây Hồ)')}</option>
+                       <option value="Cau Giay">{t('カウザイ区 (Cầu Giấy)', 'Quận Cầu Giấy (Cầu Giấy)')}</option>
+                       <option value="Thanh Xuan">{t('タインスアン区 (Thanh Xuân)', 'Quận Thanh Xuân (Thanh Xuân)')}</option>
+                       <option value="Ha Dong">{t('ハドン区 (Hà Đông)', 'Quận Hà Đông (Hà Đông)')}</option>
+                       <option value="Bac Tu Liem">{t('バクトゥーリエム区 (Bắc Từ Liêm)', 'Quận Bắc Từ Liêm (Bắc Từ Liêm)')}</option>
+                       <option value="Nam Tu Liem">{t('ナムトゥーリエム区 (Nam Từ Liêm)', 'Quận Nam Từ Liêm (Nam Từ Liêm)')}</option>
+                       <option value="My Duc">{t('ミーデュック県 (Mỹ Đức)', 'Huyện Mỹ Đức (Mỹ Đức)')}</option>
+                       <option value="Dan Phuong">{t('ダンフォン県 (Dân Phương)', 'Huyện Đan Phượng (Dân Phương)')}</option>
+                       <option value="Thuong Tin">{t('トゥオンティン県 (Thượng Tín)', 'Huyện Thượng Tín (Thượng Tín)')}</option>
+                       <option value="Hoai Duc">{t('ホアイドゥック県 (Hoài Đức)', 'Huyện Hoài Đức (Hoài Đức)')}</option>
+                       <option value="Quoc Oai">{t('クォックオアイ県 (Quốc Oai)', 'Huyện Quốc Oai (Quốc Oai)')}</option>
+                       <option value="Phu Xuyen">{t('フーズエン県 (Phú Xuyên)', 'Huyện Phú Xuyên (Phú Xuyên)')}</option>
+                       <option value="Soc Son">{t('ソックソン県 (Sóc Sơn)', 'Huyện Sóc Sơn (Sóc Sơn)')}</option>
+                       <option value="Me Linh">{t('メーリン県 (Mê Linh)', 'Huyện Mê Linh (Mê Linh)')}</option>
                     </select>
                     <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none group-focus-within:text-[#0F4186] transition-colors" />
                  </div>
@@ -314,37 +325,37 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
               {/* Language Level */}
               <section className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm">
                  <div className="mb-10">
-                    <h3 className="text-lg font-extrabold text-slate-900 mb-1">語学能力</h3>
+                    <h3 className="text-lg font-extrabold text-slate-900 mb-1">{t('語学能力', 'Năng lực ngôn ngữ')}</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Language Proficiency / Năng lực ngôn ngữ</p>
                  </div>
                  <div className="grid grid-cols-2 gap-8">
                     <div>
-                        <label className="block text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 pl-1">日本語レベル (JLPT)</label>
+                        <label className="block text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 pl-1">{t('日本語レベル (JLPT)', 'Trình độ tiếng Nhật (JLPT)')}</label>
                         <div className="relative group">
                            <select
                              value={japaneseLevel}
                              onChange={(e) => setJapaneseLevel(e.target.value)}
                              className="w-full pl-6 pr-12 py-4 bg-slate-50 border-2 border-transparent rounded-3xl outline-none focus:bg-white focus:border-[#0F4186] transition-all text-sm font-bold text-slate-700 appearance-none cursor-pointer"
                            >
-                              <option value="">選択してください</option>
-                              <option value="N1">N1 - ビジネスレベル</option>
-                              <option value="N2">N2 - 日常会話レベル</option>
-                              <option value="N3">N3 - 基礎会話</option>
+                              <option value="">{t('選択してください', 'Vui lòng chọn')}</option>
+                              <option value="N1">{t('N1 - ビジネスレベル', 'N1 - Trình độ công việc')}</option>
+                              <option value="N2">{t('N2 - 日常会話レベル', 'N2 - Trình độ hội thoại hàng ngày')}</option>
+                              <option value="N3">{t('N3 - 基礎会話', 'N3 - Hội thoại cơ bản')}</option>
                            </select>
                            <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                         </div>
                     </div>
                     <div>
-                        <label className="block text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 pl-1">ベトナム語レベル (VSTEP)</label>
+                        <label className="block text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 pl-1">{t('ベトナム語レベル (VSTEP)', 'Trình độ tiếng Việt (VSTEP)')}</label>
                         <div className="relative group">
                            <select
                              value={vietnameseLevel}
                              onChange={(e) => setVietnameseLevel(e.target.value)}
                              className="w-full pl-6 pr-12 py-4 bg-slate-50 border-2 border-transparent rounded-3xl outline-none focus:bg-white focus:border-[#0F4186] transition-all text-sm font-bold text-slate-700 appearance-none cursor-pointer"
                            >
-                              <option value="">選択してください</option>
-                              <option value="C1/C2">C1/C2 - 上級</option>
-                              <option value="B1/B2">B1/B2 - 中上級</option>
+                              <option value="">{t('選択してください', 'Vui lòng chọn')}</option>
+                              <option value="C1/C2">{t('C1/C2 - 上級', 'C1/C2 - Cao cấp')}</option>
+                              <option value="B1/B2">{t('B1/B2 - 中上級', 'B1/B2 - Trung cao cấp')}</option>
                            </select>
                            <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                         </div>
@@ -355,17 +366,17 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
               {/* Interests */}
               <section className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm">
                  <div className="mb-8">
-                    <h3 className="text-lg font-extrabold text-slate-900 mb-1">興味・関心</h3>
+                    <h3 className="text-lg font-extrabold text-slate-900 mb-1">{t('興味・関心', 'Sở thích / Quan tâm')}</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Interests / Sở thích</p>
                  </div>
                  <div className="flex flex-wrap gap-3">
                     {interestOptions.map((interest) => {
-                       const isSelected = selectedInterests.includes(interest);
+                       const isSelected = selectedInterests.includes(interest.ja);
                        return (
                           <button
                             type="button"
-                            key={interest}
-                            onClick={() => handleInterestToggle(interest)}
+                            key={interest.ja}
+                            onClick={() => handleInterestToggle(interest.ja)}
                             className={`px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border-2 ${
                                isSelected 
                                  ? 'bg-[#0F4186] text-white border-[#0F4186] shadow-lg shadow-blue-500/10' 
@@ -373,7 +384,7 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
                             }`}
                           >
                              {isSelected && <Check className="w-3.5 h-3.5" />}
-                             <span>{interest}</span>
+                             <span>{t(interest.ja, interest.vi)}</span>
                           </button>
                        );
                     })}
@@ -397,14 +408,14 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
                    onClick={handleCancel}
                    className="px-10 py-5 bg-white text-slate-500 rounded-3xl font-black uppercase tracking-widest border-2 border-transparent hover:bg-slate-100 transition-all text-xs"
                  >
-                   キャンセル
+                   {t('キャンセル', 'Hủy')}
                  </button>
                  <button
                    type="submit"
                    disabled={isSaving}
                    className="px-12 py-5 bg-[#0F4186] text-white rounded-3xl font-black uppercase tracking-widest shadow-2xl shadow-blue-500/20 hover:-translate-y-1 transition-all text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                  >
-                   {isSaving ? '保存中...' : '変更を保存'}
+                   {isSaving ? t('保存中...', 'Đang lưu...') : t('変更を保存', 'Lưu thay đổi')}
                  </button>
               </div>
            </form>
@@ -412,12 +423,12 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
 
         <footer className="p-8 border-t border-slate-100 flex items-center justify-between opacity-50">
            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-              Nihonect <span className="font-light">© 2024 Nihonect. ハノイと東京を繋ぐ。</span>
+              Nihonect <span className="font-light">{t('© 2024 Nihonect. ハノイと東京を繋ぐ。', '© 2024 Nihonect. Kết nối Hà Nội và Tokyo.')}</span>
            </div>
            <div className="flex gap-8 text-[9px] font-black uppercase tracking-widest text-slate-400">
-              <button className="hover:text-[#0F4186]">プライバシー</button>
-              <button className="hover:text-[#0F4186]">利用規約</button>
-              <button className="hover:text-[#0F4186]">コミュニティガイドライン</button>
+              <button className="hover:text-[#0F4186]">{t('プライバシー', 'Quyền riêng tư')}</button>
+              <button className="hover:text-[#0F4186]">{t('利用規約', 'Điều khoản sử dụng')}</button>
+              <button className="hover:text-[#0F4186]">{t('コミュニティガイドライン', 'Hướng dẫn cộng đồng')}</button>
            </div>
         </footer>
       </div>

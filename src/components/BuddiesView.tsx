@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, View, DEFAULT_AVATAR } from '../types';
-import { Search, Plus, MessageCircle, MoreVertical, Filter, Globe } from 'lucide-react';
+import { Search, Plus, MessageCircle, MoreVertical, Filter, Globe, Languages } from 'lucide-react';
 import Sidebar from './shared/Sidebar';
 import NotificationBell from './shared/NotificationBell';
 
@@ -20,12 +20,16 @@ interface BuddiesViewProps {
   onSelectBuddy: (id: string) => void;
   onStartChat?: (id: string) => void;
   onLogout?: () => void;
+  isTranslateOn: boolean;
+  onToggleTranslate: () => void;
 }
 
-export default function BuddiesView({ user, onNavigate, onSelectBuddy, onStartChat, onLogout }: BuddiesViewProps) {
+export default function BuddiesView({ user, onNavigate, onSelectBuddy, onStartChat, onLogout, isTranslateOn, onToggleTranslate }: BuddiesViewProps) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [filterTab, setFilterTab] = useState<'all' | 'online'>('all');
   const [isLoading, setIsLoading] = useState(true);
+
+  const t = (ja: string, vi: string) => (isTranslateOn ? vi : ja);
 
   useEffect(() => {
     const fetchFriends = async () => {
@@ -59,15 +63,28 @@ export default function BuddiesView({ user, onNavigate, onSelectBuddy, onStartCh
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#0F4186]" />
               <input 
                 type="text" 
-                placeholder="バディを検索..."
+                placeholder={t('バディを検索...', 'Tìm kiếm bạn bè...')}
                 className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-[#0F4186] shadow-sm transition-all"
               />
            </div>
            <div className="flex items-center gap-3">
+              {/* Translation Switch */}
+              <div className="flex items-center gap-2.5 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                 <Languages className="w-3.5 h-3.5 text-blue-600" />
+                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t('自動翻訳', 'Tự động dịch')}</span>
+                 <button 
+                    type="button"
+                    onClick={onToggleTranslate}
+                    className={`w-9 h-4.5 rounded-full relative transition-all ${isTranslateOn ? 'bg-blue-600' : 'bg-slate-300'}`}
+                 >
+                    <div className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full transition-all ${isTranslateOn ? 'right-0.5' : 'left-0.5'}`} />
+                 </button>
+                 <p className="text-[8px] font-black text-blue-600 border-l border-slate-200 pl-2">JP ↔ VN</p>
+              </div>
               <NotificationBell />
               <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
                 <Filter className="w-4 h-4" />
-                <span>フィルター</span>
+                <span>{t('フィルター', 'Bộ lọc')}</span>
               </button>
               <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-slate-200">
                 <img src={user.avatar} alt="Profile" />
@@ -78,18 +95,18 @@ export default function BuddiesView({ user, onNavigate, onSelectBuddy, onStartCh
         <main className="p-8 max-w-6xl mx-auto">
            <div className="flex items-end justify-between mb-10">
               <div>
-                <h1 className="text-3xl font-extrabold text-[#0F4186] mb-2 tracking-tight">バディー一覧</h1>
-                <p className="text-slate-500 font-medium">あなたと言語交換をしているパートナーたち</p>
+                <h1 className="text-3xl font-extrabold text-[#0F4186] mb-2 tracking-tight">{t('バディー一覧', 'Danh sách bạn bè')}</h1>
+                <p className="text-slate-500 font-medium">{t('あなたと言語交換をしているパートナーたち', 'Những đối tác đang giao lưu ngôn ngữ với bạn')}</p>
               </div>
               <div className="flex gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
                  <button 
                    onClick={() => setFilterTab('all')}
                    className={`px-5 py-2 text-xs font-bold rounded-lg transition-colors ${filterTab === 'all' ? 'bg-[#0F4186] text-white shadow-lg shadow-blue-500/20' : 'text-slate-500 hover:bg-slate-50'}`}
-                 >すべて</button>
+                 >{t('すべて', 'Tất cả')}</button>
                  <button 
                    onClick={() => setFilterTab('online')}
                    className={`px-5 py-2 text-xs font-bold rounded-lg transition-colors ${filterTab === 'online' ? 'bg-[#0F4186] text-white shadow-lg shadow-blue-500/20' : 'text-slate-500 hover:bg-slate-50'}`}
-                 >オンライン</button>
+                 >{t('オンライン', 'Trực tuyến')}</button>
               </div>
            </div>
 
@@ -97,7 +114,7 @@ export default function BuddiesView({ user, onNavigate, onSelectBuddy, onStartCh
               {isLoading ? (
                 <div className="col-span-full py-12 text-center text-slate-500">
                   <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  バディを読み込んでいます...
+                  {t('バディを読み込んでいます...', 'Đang tải danh sách bạn bè...')}
                 </div>
               ) : filteredFriends.map((buddy, i) => (
                 <div 
@@ -105,8 +122,8 @@ export default function BuddiesView({ user, onNavigate, onSelectBuddy, onStartCh
                   className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all group flex flex-col items-center text-center relative border-b-4 border-b-transparent hover:border-b-[#0F4186]"
                 >
                    {/* Status Badge */}
-                   <div className="absolute top-6 right-6 px-3 py-1 bg-rose-50 rounded-full border border-rose-100">
-                      <span className="text-[9px] font-black uppercase text-rose-600 tracking-widest">Matched {i + 1} weeks ago</span>
+                   <div className="px-3 py-1 bg-rose-50 rounded-full border border-rose-100 mb-4">
+                      <span className="text-[9px] font-black uppercase text-rose-600 tracking-widest">{t(`Matched ${i + 1} weeks ago`, `Đã kết đôi ${i + 1} tuần trước`)}</span>
                    </div>
 
                    <button onClick={() => onSelectBuddy(buddy.id)} className="relative mb-6 cursor-pointer">
@@ -125,28 +142,25 @@ export default function BuddiesView({ user, onNavigate, onSelectBuddy, onStartCh
                       <span>{buddy.nationality} / JP: {buddy.japaneseLevel} / VN: {buddy.vietnameseLevel}</span>
                    </div>
 
-                   <div className="grid grid-cols-2 gap-2 w-full mt-auto">
+                   <div className="w-full mt-auto">
                       <button 
                         onClick={() => onStartChat && onStartChat(buddy.id)}
-                        className="flex-1 py-3.5 bg-[#0F4186] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-[#0D3875] flex items-center justify-center gap-2"
+                        className="w-full py-3.5 bg-[#0F4186] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-[#0D3875] flex items-center justify-center gap-2"
                       >
                          <MessageCircle className="w-4 h-4" />
-                         <span>メッセージ</span>
-                      </button>
-                      <button className="p-3.5 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-100 hover:text-slate-600 transition-colors flex items-center justify-center">
-                         <MoreVertical className="w-5 h-5" />
+                         <span>{t('メッセージ', 'Tin nhắn')}</span>
                       </button>
                    </div>
                 </div>
               ))}
 
               {/* Add New Buddy Placeholder */}
-              <div className="bg-white p-10 rounded-[32px] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center hover:border-[#0F4186] hover:bg-blue-50/30 transition-all group cursor-pointer h-full">
+              <div onClick={() => onNavigate(View.FEED)} className="bg-white p-10 rounded-[32px] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center hover:border-[#0F4186] hover:bg-blue-50/30 transition-all group cursor-pointer h-full">
                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     <Plus className="w-8 h-8 text-[#0F4186]" />
                  </div>
-                 <h4 className="text-lg font-bold text-[#0F4186] mb-2 tracking-tight">新しいバディを探す</h4>
-                 <p className="text-xs text-slate-400 font-medium">共通の趣味を持つ人を見つけましょう</p>
+                 <h4 className="text-lg font-bold text-[#0F4186] mb-2 tracking-tight">{t('新しいバディを探す', 'Tìm bạn bè mới')}</h4>
+                 <p className="text-xs text-slate-400 font-medium">{t('共通の趣味を持つ人を見つけましょう', 'Hãy tìm những người có chung sở thích')}</p>
               </div>
            </div>
         </main>
