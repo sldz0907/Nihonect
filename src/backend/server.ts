@@ -1059,11 +1059,22 @@ async function bootstrap() {
           // If Japanese, translate to Vietnamese. Otherwise, translate to Japanese.
           const targetLang = isJapanese ? 'vi' : 'ja';
 
-          const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
-          const res = await fetch(url);
-          const json = await res.json();
-          if (json && json[0]) {
-            translatedText = json[0].map((item: any) => item[0]).join('');
+          try {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+            const res = await fetch(url);
+            const json = await res.json();
+            if (json && json[0]) {
+              translatedText = json[0].map((item: any) => item[0]).join('');
+            }
+          } catch (googleError: any) {
+            console.error('Google Translate failed, falling back to MyMemory API...', googleError.message);
+            const sourceLang = isJapanese ? 'ja' : 'vi';
+            const fallbackUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`;
+            const fbRes = await fetch(fallbackUrl);
+            const fbJson = await fbRes.json();
+            if (fbJson && fbJson.responseData && fbJson.responseData.translatedText) {
+              translatedText = fbJson.responseData.translatedText;
+            }
           }
         } catch (translateError) {
           console.error('Translation failed:', translateError);
