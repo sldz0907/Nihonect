@@ -89,7 +89,7 @@ export default function MessagesView({ user, initialChatId, onNavigate, onLogout
   useEffect(() => {
     const socketUrl = import.meta.env.VITE_API_URL;
     if (!socketUrl && !import.meta.env.DEV) return;
-    socketRef.current = io(socketUrl || 'http://localhost:5000');
+    socketRef.current = io(socketUrl || undefined);
     
     socketRef.current.on('receive_message', (msg: Message) => {
       setMessages(prev => [...prev, msg]);
