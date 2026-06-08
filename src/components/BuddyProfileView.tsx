@@ -65,6 +65,8 @@ interface BuddyProfileViewProps {
   onToggleTranslate: () => void;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function BuddyProfileView({ 
   buddyId, 
   onBack, 
@@ -80,7 +82,7 @@ export default function BuddyProfileView({
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const res = await fetch(`/api/users/profile/${buddyId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/users/profile/${buddyId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {

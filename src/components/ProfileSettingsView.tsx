@@ -13,6 +13,8 @@ interface ProfileSettingsViewProps {
   onToggleTranslate: () => void;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpdateUser, isTranslateOn, onToggleTranslate }: ProfileSettingsViewProps) {
   const interestOptions = [
     { ja: '文化', vi: 'Văn hóa' },
@@ -123,7 +125,7 @@ export default function ProfileSettingsView({ user, onNavigate, onLogout, onUpda
         throw new Error(t('認証トークンが見つかりません。もう一度ログインしてください。', 'Không tìm thấy mã xác thực. Vui lòng đăng nhập lại.'));
       }
 
-      const response = await fetch('/api/users/profile', {
+      const response = await fetch(`${API_BASE_URL}/api/users/profile`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,

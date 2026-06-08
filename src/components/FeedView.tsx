@@ -55,6 +55,8 @@ interface FeedViewProps {
   onToggleTranslate: () => void;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function FeedView({ user, onNavigate, onSelectBuddy, onLogout, isTranslateOn, onToggleTranslate }: FeedViewProps) {
   const [buddies, setBuddies] = useState<(Buddy & { isRequested?: boolean })[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,8 +80,8 @@ export default function FeedView({ user, onNavigate, onSelectBuddy, onLogout, is
       try {
         const token = localStorage.getItem('authToken');
         const [recRes, statsRes] = await Promise.all([
-          fetch('/api/users/recommendations', { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch('/api/users/dashboard-stats', { headers: { 'Authorization': `Bearer ${token}` } })
+          fetch(`${API_BASE_URL}/api/users/recommendations`, { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(`${API_BASE_URL}/api/users/dashboard-stats`, { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
         
         if (recRes.ok) {
@@ -102,7 +104,7 @@ export default function FeedView({ user, onNavigate, onSelectBuddy, onLogout, is
   const handleConnect = async (targetUserId: string) => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`/api/users/request/${targetUserId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/users/request/${targetUserId}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

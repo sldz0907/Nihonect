@@ -24,6 +24,8 @@ interface BuddiesViewProps {
   onToggleTranslate: () => void;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function BuddiesView({ user, onNavigate, onSelectBuddy, onStartChat, onLogout, isTranslateOn, onToggleTranslate }: BuddiesViewProps) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [filterTab, setFilterTab] = useState<'all' | 'online'>('all');
@@ -35,7 +37,7 @@ export default function BuddiesView({ user, onNavigate, onSelectBuddy, onStartCh
     const fetchFriends = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const res = await fetch('/api/users/friends', {
+        const res = await fetch(`${API_BASE_URL}/api/users/friends`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {

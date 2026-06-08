@@ -41,6 +41,8 @@ interface MessagesViewProps {
   onToggleTranslateProp: () => void;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function MessagesView({ user, initialChatId, onNavigate, onLogout, isTranslateOnProp, onToggleTranslateProp }: MessagesViewProps) {
   const [activeChat, setActiveChat] = useState<string | null>(initialChatId || null);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -58,7 +60,7 @@ export default function MessagesView({ user, initialChatId, onNavigate, onLogout
     const fetchFriends = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const res = await fetch('/api/users/friends', {
+        const res = await fetch(`${API_BASE_URL}/api/users/friends`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -85,7 +87,7 @@ export default function MessagesView({ user, initialChatId, onNavigate, onLogout
 
   // Socket Init
   useEffect(() => {
-    socketRef.current = io();
+    socketRef.current = io(API_BASE_URL);
     
     socketRef.current.on('receive_message', (msg: Message) => {
       setMessages(prev => [...prev, msg]);
@@ -119,7 +121,7 @@ export default function MessagesView({ user, initialChatId, onNavigate, onLogout
     const fetchMessages = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const res = await fetch(`/api/messages/${activeChat}`, {
+        const res = await fetch(`${API_BASE_URL}/api/messages/${activeChat}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {

@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react';
 import { Upload, Calendar, MapPin, Tag, FileText, Type, Loader2 } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function AdminEventForm() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -43,7 +45,7 @@ export default function AdminEventForm() {
       formData.append('category', category);
       formData.append('image', imageFile);
 
-      const res = await fetch('/api/admin/events', {
+      const res = await fetch(`${API_BASE_URL}/api/admin/events`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`

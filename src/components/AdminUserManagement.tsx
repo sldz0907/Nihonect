@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { User } from '../types';
 import { Trash2, Ban, CheckCircle, Search, Filter } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function AdminUserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,7 +25,7 @@ export default function AdminUserManagement() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('/api/admin/users', {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -47,7 +49,7 @@ export default function AdminUserManagement() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`/api/admin/users/${userId}/status`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +70,7 @@ export default function AdminUserManagement() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`/api/admin/users/${userId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

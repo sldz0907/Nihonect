@@ -10,6 +10,8 @@ interface ReviewViewProps {
   onToggleTranslate: () => void;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function ReviewView({ buddyId, onBack, onSuccess, isTranslateOn, onToggleTranslate }: ReviewViewProps) {
   const [rating, setRating] = useState(0);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -35,7 +37,7 @@ export default function ReviewView({ buddyId, onBack, onSuccess, isTranslateOn, 
 
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`/api/reviews/${buddyId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/reviews/${buddyId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

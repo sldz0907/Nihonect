@@ -10,6 +10,8 @@ interface AppNotification {
   message?: string;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -34,7 +36,7 @@ export default function NotificationBell() {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('/api/users/notifications', {
+      const res = await fetch(`${API_BASE_URL}/api/users/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -49,7 +51,7 @@ export default function NotificationBell() {
   const handleAction = async (id: string, action: 'accept' | 'decline') => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`/api/users/${action}/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/users/${action}/${id}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -64,7 +66,7 @@ export default function NotificationBell() {
   const handleReadEventNotification = async (id: string) => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`/api/notifications/${id}/read`, {
+      const res = await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });

@@ -11,6 +11,8 @@ interface EventsViewProps {
   onToggleTranslate: () => void;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function EventsView({ user, onNavigate, onLogout, isTranslateOn, onToggleTranslate }: EventsViewProps) {
   const [events, setEvents] = useState<any[]>([]);
   const [featuredEvent, setFeaturedEvent] = useState<any>(null);
@@ -23,7 +25,7 @@ export default function EventsView({ user, onNavigate, onLogout, isTranslateOn, 
     const fetchEvents = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const res = await fetch('/api/events', {
+        const res = await fetch(`${API_BASE_URL}/api/events`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -47,7 +49,7 @@ export default function EventsView({ user, onNavigate, onLogout, isTranslateOn, 
     setJoining(true);
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`/api/events/${eventId}/join`, {
+      const res = await fetch(`${API_BASE_URL}/api/events/${eventId}/join`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
