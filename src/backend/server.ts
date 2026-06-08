@@ -1060,20 +1060,19 @@ async function bootstrap() {
           const targetLang = isJapanese ? 'vi' : 'ja';
 
           try {
-            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+            const url = `https://translate.googleapis.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${targetLang}&q=${encodeURIComponent(text)}`;
             const res = await fetch(url);
             const json = await res.json();
-            if (json && json[0]) {
-              translatedText = json[0].map((item: any) => item[0]).join('');
+            if (json && json[0] && typeof json[0][0] === 'string') {
+              translatedText = json[0][0];
             }
           } catch (googleError: any) {
-            console.error('Google Translate failed, falling back to MyMemory API...', googleError.message);
-            const sourceLang = isJapanese ? 'ja' : 'vi';
-            const fallbackUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`;
+            console.error('Google Translate dict-chrome-ex failed, falling back to gtx...', googleError.message);
+            const fallbackUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
             const fbRes = await fetch(fallbackUrl);
             const fbJson = await fbRes.json();
-            if (fbJson && fbJson.responseData && fbJson.responseData.translatedText) {
-              translatedText = fbJson.responseData.translatedText;
+            if (fbJson && fbJson[0]) {
+              translatedText = fbJson[0].map((item: any) => item[0]).join('');
             }
           }
         } catch (translateError) {
