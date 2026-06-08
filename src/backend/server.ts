@@ -1028,8 +1028,10 @@ app.post('/api/reviews/:targetId', requireAuth, async (req: Request, res: Respon
 // Bootstrap
 // -------------------------
 async function bootstrap() {
-  const port = process.env.PORT || 5000;
-  await connectToDatabase();
+  const PORT = process.env.PORT || 4000;
+  connectToDatabase().catch(err => {
+    console.error('MongoDB connection error:', err);
+  });
 
   const httpServer = http.createServer(app);
   const io = new SocketIOServer(httpServer, {
@@ -1090,10 +1092,11 @@ async function bootstrap() {
     });
   });
 
-  httpServer.listen(port, () => console.log(`Server is running on http://localhost:${port}`));
+  httpServer.listen(Number(PORT), "0.0.0.0", () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
 }
 
 bootstrap().catch((error) => {
   console.error('Failed to start server:', error);
-  process.exit(1);
 });
