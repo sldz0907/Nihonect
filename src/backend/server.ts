@@ -7,7 +7,7 @@ import { upload } from '../../lib/cloudinary.js';
 import mongoose, { InferSchemaType, Model } from 'mongoose';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-
+import { GoogleGenAI } from '@google/genai';
 /**
  * Backend single-file entry.
  *
@@ -1057,23 +1057,20 @@ async function bootstrap() {
           // Check if the message contains Japanese characters (Hiragana, Katakana, Kanji)
           const isJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text);
           // If Japanese, translate to Vietnamese. Otherwise, translate to Japanese.
-          const targetLang = isJapanese ? 'vi' : 'ja';
+          const targetLang = isJapanese ? 'Vietnamese' : 'Japanese';
 
           try {
-            const url = `https://translate.googleapis.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${targetLang}&q=${encodeURIComponent(text)}`;
-            const res = await fetch(url);
-            const json = await res.json();
-            if (json && json[0] && typeof json[0][0] === 'string') {
-              translatedText = json[0][0];
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const prompt = `Translate the following text to ${targetLang}. Only output the translated text, nothing else. Text to translate:\n\n${text}`;
+            const response = await ai.models.generateContent({
+              model: 'gemini-2.5-flash',
+              contents: prompt,
+            });
+            if (response.text) {
+              translatedText = response.text.trim();
             }
-          } catch (googleError: any) {
-            console.error('Google Translate dict-chrome-ex failed, falling back to gtx...', googleError.message);
-            const fallbackUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
-            const fbRes = await fetch(fallbackUrl);
-            const fbJson = await fbRes.json();
-            if (fbJson && fbJson[0]) {
-              translatedText = fbJson[0].map((item: any) => item[0]).join('');
-            }
+          } catch (geminiError: any) {
+            console.error('Gemini translation failed:', geminiError.message);
           }
         } catch (translateError) {
           console.error('Translation failed:', translateError);
