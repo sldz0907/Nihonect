@@ -1071,6 +1071,18 @@ async function bootstrap() {
             }
           } catch (geminiError: any) {
             console.error('Gemini translation failed:', geminiError.message);
+            // Fallback to Google Translate (gtx) if Gemini fails (e.g., Rate limit 429)
+            try {
+              const fbLang = isJapanese ? 'vi' : 'ja';
+              const fallbackUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${fbLang}&dt=t&q=${encodeURIComponent(text)}`;
+              const fbRes = await fetch(fallbackUrl);
+              const fbJson = await fbRes.json();
+              if (fbJson && fbJson[0]) {
+                translatedText = fbJson[0].map((item: any) => item[0]).join('');
+              }
+            } catch (fallbackErr: any) {
+              console.error('Fallback translation also failed:', fallbackErr.message);
+            }
           }
         } catch (translateError) {
           console.error('Translation failed:', translateError);
