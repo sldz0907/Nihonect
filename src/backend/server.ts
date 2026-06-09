@@ -127,6 +127,10 @@ const eventSchema = new mongoose.Schema(
     location: { type: String, required: true },
     image: { type: String, required: true },
     category: { type: String, required: true },
+    capacity: { type: Number, default: 0 },
+    price: { type: String, default: '無料' },
+    format: { type: String, enum: ['オンライン', 'オフライン'], default: 'オフライン' },
+    languageRequirement: { type: String, default: '' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     attendees: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
   },
@@ -858,7 +862,7 @@ app.post('/api/admin/events', requireAuth, requireAdmin, (req, res, next) => {
   });
 }, async (req: MulterRequest, res: Response) => {
   try {
-    const { title, description, date, location, category } = req.body;
+    const { title, description, date, location, category, capacity, price, format, languageRequirement } = req.body;
 
     if (!req.file) {
       return res.status(400).json({ message: 'Event image is required' });
@@ -870,6 +874,10 @@ app.post('/api/admin/events', requireAuth, requireAdmin, (req, res, next) => {
       date,
       location,
       category,
+      capacity: capacity ? parseInt(capacity) : 0,
+      price: price || '無料',
+      format: format || 'オフライン',
+      languageRequirement: languageRequirement || '',
       image: req.file.path,
       createdBy: req.auth!.sub,
       attendees: []

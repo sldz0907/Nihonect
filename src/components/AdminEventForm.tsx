@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Upload, Calendar, MapPin, Tag, FileText, Type, Loader2 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -9,6 +9,10 @@ export default function AdminEventForm() {
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState('文化交流');
+  const [capacity, setCapacity] = useState('');
+  const [price, setPrice] = useState('無料');
+  const [format, setFormat] = useState('オフライン');
+  const [languageRequirement, setLanguageRequirement] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,6 +47,10 @@ export default function AdminEventForm() {
       formData.append('date', date);
       formData.append('location', location);
       formData.append('category', category);
+      formData.append('capacity', capacity);
+      formData.append('price', price);
+      formData.append('format', format);
+      formData.append('languageRequirement', languageRequirement);
       formData.append('image', imageFile);
 
       const res = await fetch(`${API_BASE_URL}/api/admin/events`, {
@@ -59,6 +67,10 @@ export default function AdminEventForm() {
         setDescription('');
         setDate('');
         setLocation('');
+        setCapacity('');
+        setPrice('無料');
+        setFormat('オフライン');
+        setLanguageRequirement('');
         setImageFile(null);
         setImagePreview(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -161,6 +173,57 @@ export default function AdminEventForm() {
               <option value="ビジネス">ビジネス</option>
               <option value="エンタメ">エンタメ</option>
             </select>
+          </div>
+
+          <div className="col-span-1">
+            <label className="flex items-center gap-2 text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 pl-2">
+              <Type className="w-4 h-4 text-[#0F4186]" /> 定員 (任意)
+            </label>
+            <input 
+              type="number"
+              value={capacity}
+              onChange={(e) => setCapacity(e.target.value)}
+              className="w-full p-5 bg-slate-50 border-2 border-transparent rounded-[24px] outline-none focus:bg-white focus:border-[#0F4186] transition-all text-sm font-bold text-slate-800" 
+              placeholder="例：50" 
+            />
+          </div>
+
+          <div className="col-span-1">
+            <label className="flex items-center gap-2 text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 pl-2">
+              <Tag className="w-4 h-4 text-[#0F4186]" /> 参加費 (任意)
+            </label>
+            <input 
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="w-full p-5 bg-slate-50 border-2 border-transparent rounded-[24px] outline-none focus:bg-white focus:border-[#0F4186] transition-all text-sm font-bold text-slate-800" 
+              placeholder="例：無料, 500円" 
+            />
+          </div>
+
+          <div className="col-span-1">
+            <label className="flex items-center gap-2 text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 pl-2">
+              <MapPin className="w-4 h-4 text-[#0F4186]" /> 開催形式 <span className="text-rose-500">*</span>
+            </label>
+            <select 
+              value={format}
+              onChange={(e) => setFormat(e.target.value)}
+              className="w-full p-5 bg-slate-50 border-2 border-transparent rounded-[24px] outline-none focus:bg-white focus:border-[#0F4186] transition-all text-sm font-bold text-slate-800 appearance-none cursor-pointer"
+            >
+              <option value="オフライン">オフライン (Offline)</option>
+              <option value="オンライン">オンライン (Online)</option>
+            </select>
+          </div>
+
+          <div className="col-span-1">
+            <label className="flex items-center gap-2 text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 pl-2">
+              <FileText className="w-4 h-4 text-[#0F4186]" /> 言語要件 (任意)
+            </label>
+            <input 
+              value={languageRequirement}
+              onChange={(e) => setLanguageRequirement(e.target.value)}
+              className="w-full p-5 bg-slate-50 border-2 border-transparent rounded-[24px] outline-none focus:bg-white focus:border-[#0F4186] transition-all text-sm font-bold text-slate-800" 
+              placeholder="例：N3以上" 
+            />
           </div>
 
           <div className="col-span-2">
