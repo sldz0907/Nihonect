@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import http from 'http';
+import fs from 'fs';
 import { Server as SocketIOServer } from 'socket.io';
 import { GoogleGenAI } from '@google/genai';
 import app from './app.js';
@@ -22,6 +23,7 @@ async function translateText(text: string): Promise<string> {
       translatedText = response.text.trim();
     }
   } catch (geminiError: any) {
+    fs.appendFileSync('translation_error.log', new Date().toISOString() + ' Gemini error: ' + geminiError.message + '\n');
     console.error('Gemini translation failed:', geminiError.message);
     try {
       const fbLang = isJapanese ? 'vi' : 'ja';
@@ -40,6 +42,9 @@ async function translateText(text: string): Promise<string> {
         const json2 = await res2.json();
         if (json2 && json2.responseData && json2.responseData.translatedText) {
           translatedText = json2.responseData.translatedText;
+          if (translatedText.includes('MYMEMORY WARNING')) {
+            translatedText = ''; // Prevent saving the warning as translation
+          }
         }
       } catch (err2: any) {
         console.error('Second fallback failed:', err2.message);
