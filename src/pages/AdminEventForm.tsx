@@ -8,7 +8,7 @@ export default function AdminEventForm() {
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
-  const [category, setCategory] = useState('文化交流');
+  const [category, setCategory] = useState('文化');
   const [capacity, setCapacity] = useState('');
   const [price, setPrice] = useState('無料');
   const [format, setFormat] = useState('オフライン');
@@ -168,10 +168,10 @@ export default function AdminEventForm() {
               onChange={(e) => setCategory(e.target.value)}
               className="w-full p-5 bg-slate-50 border-2 border-transparent rounded-[24px] outline-none focus:bg-white focus:border-[#0F4186] transition-all text-sm font-bold text-slate-800 appearance-none cursor-pointer"
             >
-              <option value="文化交流">文化交流</option>
-              <option value="言語交換">言語交換</option>
-              <option value="ビジネス">ビジネス</option>
-              <option value="エンタメ">エンタメ</option>
+              <option value="文化">文化 (Culture)</option>
+              <option value="ワークショップ">ワークショップ (Workshop)</option>
+              <option value="言語交換">言語交換 (Language Exchange)</option>
+              <option value="交流会">交流会 (Networking)</option>
             </select>
           </div>
 
