@@ -6,7 +6,6 @@ import {
   Calendar, 
   Users, 
   HelpCircle, 
-  Bell,
   LogOut, 
   Settings,
   CircleUser
@@ -79,16 +78,9 @@ export default function Sidebar({ currentView, onNavigate, onLogout, role }: Sid
       </nav>
 
       <div className="pt-8 border-t border-slate-100 space-y-1">
-        <button 
-          onClick={() => onNavigate(View.NOTIFICATIONS)}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-            currentView === View.NOTIFICATIONS 
-              ? 'bg-blue-50 text-[#0F4186] font-bold shadow-sm shadow-blue-500/5' 
-              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-          }`}
-        >
-          <Bell className={`w-5 h-5 ${currentView === View.NOTIFICATIONS ? 'text-[#0F4186]' : 'text-slate-400'}`} />
-          <span className="text-sm">通知</span>
+        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all">
+          <HelpCircle className="w-5 h-5 text-slate-400" />
+          <span className="text-sm">ヘルプ</span>
         </button>
         <button 
           onClick={handleLogout}

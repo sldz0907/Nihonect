@@ -21,7 +21,6 @@ import ReportQueueView from './pages/ReportQueueView';
 import BuddyProfileView from './pages/BuddyProfileView';
 import ReviewView from './pages/ReviewView';
 import AdminLayout from './pages/AdminLayout';
-import NotificationsView from './pages/NotificationsView';
 import { loginWithEmail, registerWithEmail } from './services/authApi';
 
 type StoredAuth = { token: string; user: User };
@@ -299,7 +298,6 @@ function AppShell({
           )}
           {currentView === View.MESSAGES && <MessagesView user={user} onNavigate={setCurrentView} onLogout={onLogout} initialChatId={selectedBuddyId} isTranslateOnProp={isTranslateOn} onToggleTranslateProp={onToggleTranslate} />}
           {currentView === View.EVENTS && <EventsView user={user} onNavigate={setCurrentView} onLogout={onLogout} isTranslateOn={isTranslateOn} onToggleTranslate={onToggleTranslate} />}
-          {currentView === View.NOTIFICATIONS && <NotificationsView />}
           {currentView === View.PROFILE_SETTINGS && (
             <ProfileSettingsView user={user} onNavigate={setCurrentView} onLogout={onLogout} onUpdateUser={onUpdateUser} isTranslateOn={isTranslateOn} onToggleTranslate={onToggleTranslate} />
           )}
