@@ -10,7 +10,7 @@ import {
   Settings,
   CircleUser
 } from 'lucide-react';
-import { logout } from '../../lib/authApi';
+import { logout } from '../../services/authApi';
 
 interface SidebarProps {
   currentView: View;

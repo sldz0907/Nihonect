@@ -7,7 +7,7 @@ import {
   Settings,
   LogOut
 } from 'lucide-react';
-import { logout } from '../../lib/authApi';
+import { logout } from '../../services/authApi';
 
 interface AdminSidebarProps {
   currentView: View;
