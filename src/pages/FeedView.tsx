@@ -59,6 +59,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export default function FeedView({ user, onNavigate, onSelectBuddy, onLogout, isTranslateOn, onToggleTranslate }: FeedViewProps) {
   const [buddies, setBuddies] = useState<(Buddy & { isRequested?: boolean })[]>([]);
+  const [nearestEvent, setNearestEvent] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({ newMatchesCount: 0, activeCommunityCount: 0, nearbyUsersCount: 0, friendsCount: 0 });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -79,9 +80,10 @@ export default function FeedView({ user, onNavigate, onSelectBuddy, onLogout, is
     const fetchRecommendations = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const [recRes, statsRes] = await Promise.all([
+        const [recRes, statsRes, eventsRes] = await Promise.all([
           fetch(`${API_BASE_URL}/api/users/recommendations`, { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch(`${API_BASE_URL}/api/users/dashboard-stats`, { headers: { 'Authorization': `Bearer ${token}` } })
+          fetch(`${API_BASE_URL}/api/users/dashboard-stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(`${API_BASE_URL}/api/events`, { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
         
         if (recRes.ok) {
@@ -91,6 +93,14 @@ export default function FeedView({ user, onNavigate, onSelectBuddy, onLogout, is
         if (statsRes.ok) {
           const statsData = await statsRes.json();
           setStats(statsData);
+        }
+        if (eventsRes.ok) {
+          const eventsData = await eventsRes.json();
+          const events = eventsData.events || [];
+          const now = new Date();
+          const upcoming = events.filter((e: any) => new Date(e.date) >= now).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          const past = events.filter((e: any) => new Date(e.date) < now).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          setNearestEvent(upcoming.length > 0 ? upcoming[0] : (past.length > 0 ? past[0] : null));
         }
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
@@ -300,41 +310,43 @@ export default function FeedView({ user, onNavigate, onSelectBuddy, onLogout, is
           </section>
 
           {/* Events Section */}
-          <section>
-            <div className="flex items-center justify-between mb-8">
-              <span className="px-4 py-2 bg-white rounded-full text-xs font-bold text-[#0F4186] border border-slate-100 shadow-sm">{t('トレンドイベント', 'Sự kiện nổi bật')}</span>
-            </div>
-            <div className="relative bg-[#0F4186] rounded-[32px] overflow-hidden group cursor-pointer shadow-2xl shadow-blue-900/20">
-              <div className="absolute inset-0 opacity-20">
-                <img src="https://images.unsplash.com/photo-1514525253361-bee8718a300c?w=1200&h=600&fit=crop" className="w-full h-full object-cover" alt="Event" />
+          {nearestEvent && (
+            <section>
+              <div className="flex items-center justify-between mb-8">
+                <span className="px-4 py-2 bg-white rounded-full text-xs font-bold text-[#0F4186] border border-slate-100 shadow-sm">{t('トレンドイベント', 'Sự kiện nổi bật')}</span>
               </div>
-              <div className="relative p-10 z-10 text-white flex gap-12 items-center">
-                <div className="flex-1">
-                  <div className="inline-flex px-3 py-1 bg-rose-500 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">{t('言語ミートアップ', 'Gặp gỡ ngôn ngữ')}</div>
-                  <h2 className="text-3xl font-bold mb-4 leading-tight">{t('日越言語交流ナイト 2024', 'Đêm giao lưu ngôn ngữ Nhật - Việt 2024')}</h2>
-                  <p className="text-blue-100/70 mb-8 max-w-lg">{t('100人以上のバディと一緒に、寿司や春巻きを楽しみながら会話を弾ませましょう！', 'Cùng trò chuyện vui vẻ với hơn 100 người bạn trong khi thưởng thức sushi và nem cuốn!')}</p>
-                  
-                  <div className="flex items-center gap-8 text-sm text-blue-100/60 font-medium">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>{t('12月15日, 18:00', '18:00, Ngày 15 tháng 12')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      <span>{t('ハノイ, ロッテセンター', 'Lotte Center, Hà Nội')}</span>
+              <div className="relative bg-[#0F4186] rounded-[32px] overflow-hidden group cursor-pointer shadow-2xl shadow-blue-900/20">
+                <div className="absolute inset-0 opacity-20">
+                  <img src={nearestEvent.image || "https://images.unsplash.com/photo-1514525253361-bee8718a300c?w=1200&h=600&fit=crop"} className="w-full h-full object-cover" alt="Event" />
+                </div>
+                <div className="relative p-10 z-10 text-white flex gap-12 items-center">
+                  <div className="flex-1">
+                    <div className="inline-flex px-3 py-1 bg-rose-500 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">{nearestEvent.category}</div>
+                    <h2 className="text-3xl font-bold mb-4 leading-tight">{nearestEvent.title}</h2>
+                    <p className="text-blue-100/70 mb-8 max-w-lg line-clamp-2">{nearestEvent.description}</p>
+                    
+                    <div className="flex items-center gap-8 text-sm text-blue-100/60 font-medium">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>{new Date(nearestEvent.date).toLocaleDateString(isTranslateOn ? 'vi-VN' : 'ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        <span>{nearestEvent.location}</span>
+                      </div>
                     </div>
                   </div>
+                  
+                  <button 
+                     onClick={() => onNavigate(View.EVENTS)}
+                     className="bg-white text-[#0F4186] px-10 py-4 rounded-2xl font-extrabold shadow-xl hover:scale-105 active:scale-95 transition-all text-sm uppercase tracking-wider"
+                  >
+                    {t('予約する', 'Đặt chỗ')}
+                  </button>
                 </div>
-                
-                <button 
-                   onClick={() => onNavigate(View.EVENTS)}
-                   className="bg-white text-[#0F4186] px-10 py-4 rounded-2xl font-extrabold shadow-xl hover:scale-105 active:scale-95 transition-all text-sm uppercase tracking-wider"
-                >
-                  {t('予約する', 'Đặt chỗ')}
-                </button>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
         </main>
 
         <footer className="mt-12 p-8 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-slate-400">
