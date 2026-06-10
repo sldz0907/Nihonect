@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { View } from '../../types';
 import {
-  LayoutDashboard, 
-  Users, 
-  CalendarPlus, 
+  LayoutDashboard,
+  Users,
+  CalendarPlus,
   CalendarDays,
   ShieldAlert,
   LogOut
@@ -18,7 +18,7 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ currentView, onNavigate, onLogout }: AdminSidebarProps) {
   const navigate = useNavigate();
-  
+
   const handleLogout = () => {
     logout();
     if (onLogout) {
@@ -51,11 +51,10 @@ export default function AdminSidebar({ currentView, onNavigate, onLogout }: Admi
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-[20px] transition-all font-bold text-sm ${
-                isActive 
-                  ? 'bg-white text-[#0F4186] shadow-xl shadow-black/10 translate-x-2' 
+              className={`w-full flex items-center gap-4 px-5 py-4 rounded-[20px] transition-all font-bold text-sm ${isActive
+                  ? 'bg-white text-[#0F4186] shadow-xl shadow-black/10 translate-x-2'
                   : 'text-blue-200 hover:text-white hover:bg-white/10'
-              }`}
+                }`}
             >
               <Icon className={`w-5 h-5 ${isActive ? 'text-[#0F4186]' : 'text-blue-300'}`} />
               <span className="tracking-wide">{item.label}</span>
@@ -65,15 +64,15 @@ export default function AdminSidebar({ currentView, onNavigate, onLogout }: Admi
       </nav>
 
       <div className="pt-10 border-t border-white/10 space-y-2 relative z-30">
-        <button 
+        <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-white bg-white/5 border border-white/10 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all font-bold text-sm shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-semibold hover:bg-white/10 transition-all"
         >
           <LogOut className="w-5 h-5" />
           <span className="tracking-wide">ログアウト</span>
         </button>
       </div>
-      
+
       {/* Background decoration */}
       <div className="absolute bottom-0 left-0 w-full h-64 bg-linear-to-t from-[#0a2e5c] to-transparent pointer-events-none" />
     </div>
