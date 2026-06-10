@@ -33,6 +33,17 @@ async function translateText(text: string): Promise<string> {
       }
     } catch (fallbackErr: any) {
       console.error('Fallback translation also failed:', fallbackErr.message);
+      try {
+        const langpair = isJapanese ? 'ja|vi' : 'vi|ja';
+        const url2 = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langpair}`;
+        const res2 = await fetch(url2);
+        const json2 = await res2.json();
+        if (json2 && json2.responseData && json2.responseData.translatedText) {
+          translatedText = json2.responseData.translatedText;
+        }
+      } catch (err2: any) {
+        console.error('Second fallback failed:', err2.message);
+      }
     }
   }
   return translatedText;
