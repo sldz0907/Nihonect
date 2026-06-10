@@ -178,7 +178,7 @@ export default function FeedView({ user, onNavigate, onSelectBuddy, onLogout, is
           {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-6 mb-12">
             {[
-              { icon: Zap, label: t('スマートマッチ', 'Ghép đôi thông minh'), value: t(`${stats.newMatchesCount}件の新しいマッチ`, `${stats.newMatchesCount} gợi ý mới`), color: 'blue' },
+              { icon: Zap, label: t('スマートマッチ', 'Ghép đôi thông minh'), value: t(`${stats.newMatchesCount}件の新しいマッチ`, `${stats.newMatchesCount} gợi ý mới`), color: 'blue', subText: undefined },
               { icon: Heart, label: t('コミュニティ', 'Cộng đồng'), value: t(`つながっているバディ ${stats.friendsCount}名`, `Đã kết nối với ${stats.friendsCount} bạn bè`), color: 'rose', onClick: () => onNavigate(View.BUDDIES) },
               { icon: MapPin, label: t('場所', 'Địa điểm'), value: (user.livingArea ? ((isTranslateOn ? livingAreaMapVi[user.livingArea] : livingAreaMap[user.livingArea]) || user.livingArea) : '') || user.location || t('未設定', 'Chưa thiết lập'), color: 'indigo' },
             ].map((stat, i) => (

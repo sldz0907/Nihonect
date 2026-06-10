@@ -6,6 +6,16 @@ export interface AuthUser {
   email: string;
   role: ApiRole;
   provider: 'local' | 'google' | 'facebook' | 'line';
+  profilePicture?: string;
+  bio?: string;
+  livingArea?: string;
+  japaneseLevel?: string;
+  vietnameseLevel?: string;
+  interests?: string[];
+  location?: string;
+  nationality?: string;
+  job?: string;
+  age?: number;
 }
 
 export interface AuthResponse {
