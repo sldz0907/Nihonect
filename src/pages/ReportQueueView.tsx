@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { User, View } from '../types/index';
 import { 
   ShieldAlert, 
@@ -23,41 +24,68 @@ interface ReportQueueViewProps {
 }
 
 export default function ReportQueueView({ user, onNavigate, onLogout }: ReportQueueViewProps) {
-  const reports = [
-    { 
-      id: '1', 
-      type: '嫌がらせ', 
-      time: '2時間前', 
-      title: 'イベント内での不適切なコメント', 
-      desc: '「不快なコメント...」',
-      reporter: 'Huyen My',
-      reported: 'Sato_99',
-      status: '審査中',
-      severity: 'medium'
-    },
-    { 
-      id: '2', 
-      type: 'スパム', 
-      time: '5時間前', 
-      title: '繰り返される広告投稿', 
-      desc: '「ゴミ投稿の疑い...」',
-      reporter: 'Tanaka Kenji',
-      reported: 'VN_Gifts_24',
-      status: '未処理',
-      severity: 'low'
-    },
-    { 
-      id: '3', 
-      type: '重大な違反', 
-      time: '緊急', 
-      title: 'メッセージ経由でのフィッシングリンク共有', 
-      desc: '「なりすまし詐欺の疑い...」',
-      reporter: 'システム',
-      reported: 'Unknown_User_9',
-      status: '転送済み',
-      severity: 'high'
-    },
-  ];
+  const [reports, setReports] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchReports = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/reports`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReports(data.reports || []);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const handleUpdateStatus = async (reportId: string, status: string) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/reports/${reportId}/status`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) {
+        fetchReports();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleBanUser = async (userId: string) => {
+    if (!confirm('このユーザーをバンしますか？ (Bạn có chắc chắn muốn khóa người dùng này?)')) return;
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/users/${userId}/status`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ status: 'banned' })
+      });
+      if (res.ok) {
+        alert('ユーザーをバンしました。(Đã khóa người dùng.)');
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="flex bg-[#F8FAFC] h-screen overflow-hidden">
@@ -109,61 +137,66 @@ export default function ReportQueueView({ user, onNavigate, onLogout }: ReportQu
                        </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
-                       {reports.map((report, i) => (
-                         <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
+                       {reports.map((report) => (
+                         <tr key={report._id} className="group hover:bg-slate-50/50 transition-colors">
                             <td className="py-8 px-10 max-w-sm">
                                <div className="flex flex-col items-start gap-2">
                                   <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${
                                     report.severity === 'high' ? 'bg-rose-500 text-white' : 
                                     report.severity === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'
                                   }`}>
-                                     {report.type} • {report.time}
+                                     {report.type} • {new Date(report.createdAt).toLocaleDateString()}
                                   </span>
-                                  <h4 className="text-sm font-extrabold text-slate-900">{report.title}</h4>
-                                  <p className="text-xs text-slate-400 italic">「{report.desc}」</p>
+                                  <p className="text-xs text-slate-600">「{report.description}」</p>
                                </div>
                             </td>
                             <td className="py-8 px-10">
                                <div className="flex items-center gap-3">
                                   <div className="text-right">
                                      <p className="text-[9px] font-bold text-slate-300 uppercase leading-none mb-1">通報者</p>
-                                     <p className="text-xs font-bold text-slate-700">{report.reporter}</p>
+                                     <p className="text-xs font-bold text-slate-700">{report.reporter?.name || 'Unknown'}</p>
                                   </div>
                                   <ArrowRightIcon className="w-4 h-4 text-slate-200" />
                                   <div className="text-left">
-                                     <p className="text-[9px] font-bold text-rose-300 uppercase leading-none mb-1">被通報者</p>
-                                     <p className="text-xs font-bold text-rose-950">{report.reported}</p>
+                                     <p className="text-[9px] font-bold text-rose-300 uppercase leading-none mb-1">対象者</p>
+                                     <p className="text-xs font-bold text-rose-950">{report.reportedUser?.name || 'Unknown'}</p>
                                   </div>
                                </div>
                             </td>
                             <td className="py-8 px-10">
                                <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 w-max ${
-                                 report.status === '審査中' ? 'bg-purple-50 text-purple-600' : 
-                                 report.status === '未処理' ? 'bg-slate-100 text-slate-500' : 'bg-rose-50 text-rose-600'
+                                 report.status === 'resolved' ? 'bg-emerald-50 text-emerald-600' : 
+                                 report.status === 'dismissed' ? 'bg-slate-100 text-slate-500' : 'bg-purple-50 text-purple-600'
                                }`}>
                                   <div className={`w-1.5 h-1.5 rounded-full ${
-                                    report.status === '審査中' ? 'bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.5)]' : 
-                                    report.status === '未処理' ? 'bg-slate-300' : 'bg-rose-400'
+                                    report.status === 'resolved' ? 'bg-emerald-400' : 
+                                    report.status === 'dismissed' ? 'bg-slate-300' : 'bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.5)]'
                                   }`} />
-                                  {report.status}
+                                  {report.status.toUpperCase()}
                                </span>
                             </td>
                             <td className="py-8 px-10 text-right">
                                <div className="flex items-center justify-end gap-2">
-                                  <button className="flex items-center gap-2 px-5 py-2.5 bg-[#0F4186] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] shadow-lg shadow-blue-500/10 transition-all">
-                                     <Eye className="w-3.5 h-3.5" />
-                                     詳細を見る
+                                  <button onClick={() => handleUpdateStatus(report._id, 'resolved')} className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors" title="Resolve">
+                                     <CheckCircle2 className="w-4 h-4" />
                                   </button>
-                                  <button className="p-2.5 bg-rose-50 text-rose-400 rounded-2xl hover:bg-rose-100 hover:text-rose-600 transition-colors">
+                                  <button onClick={() => handleUpdateStatus(report._id, 'dismissed')} className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-100 transition-colors" title="Dismiss">
                                      <Trash2 className="w-4 h-4" />
                                   </button>
-                                  <button className="p-2.5 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-900 hover:text-white transition-all">
+                                  <button onClick={() => handleBanUser(report.reportedUser?._id)} className="p-2 bg-rose-50 text-rose-400 rounded-xl hover:bg-rose-100 hover:text-rose-600 transition-all" title="Ban User">
                                      <Ban className="w-4 h-4" />
                                   </button>
                                </div>
                             </td>
                          </tr>
                        ))}
+                       {reports.length === 0 && (
+                         <tr>
+                           <td colSpan={4} className="py-12 text-center text-slate-400">
+                             現在通報はありません。(Hiện tại không có báo cáo nào.)
+                           </td>
+                         </tr>
+                       )}
                     </tbody>
                  </table>
               </div>

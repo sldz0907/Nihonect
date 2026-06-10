@@ -5,6 +5,7 @@ import {
   Users, 
   CalendarPlus, 
   CalendarDays,
+  ShieldAlert,
   LogOut
 } from 'lucide-react';
 import { logout } from '../../services/authApi';
@@ -32,6 +33,7 @@ export default function AdminSidebar({ currentView, onNavigate, onLogout }: Admi
     { id: View.ADMIN_USERS, label: 'ユーザー管理', icon: Users },
     { id: View.ADMIN_EVENTS, label: 'イベント作成', icon: CalendarPlus },
     { id: View.ADMIN_EVENT_MANAGEMENT, label: 'イベント管理', icon: CalendarDays },
+    { id: View.REPORT_QUEUE, label: '通報管理', icon: ShieldAlert },
   ];
 
   return (

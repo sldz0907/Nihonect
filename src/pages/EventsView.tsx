@@ -98,34 +98,34 @@ export default function EventsView({ user, onNavigate, onLogout, isTranslateOn, 
       
       <div className="flex-1 overflow-y-auto">
         <header className="sticky top-0 z-30 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-4 flex items-center justify-between border-b border-slate-100">
-           <div className="w-96 relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+           <div className="w-[500px] relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#0F4186]" />
               <input 
                 type="text" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('イベントを検索...', 'Tìm kiếm sự kiện...')}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:border-[#0F4186] transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-full text-base focus:outline-none focus:border-[#0F4186] focus:ring-4 focus:ring-[#0F4186]/5 transition-all shadow-sm"
               />
            </div>
            <div className="flex items-center gap-4">
-              <button 
-                onClick={onToggleTranslate}
-                className="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
-              >
-                <Languages className={`w-4 h-4 ${isTranslateOn ? 'text-[#0F4186]' : 'text-slate-400'}`} />
-                <div className="flex items-center gap-1.5">
-                  <span className={`text-[10px] font-bold ${!isTranslateOn ? 'text-slate-600' : 'text-slate-400'}`}>JA</span>
-                  <div className={`w-8 h-4 rounded-full relative transition-all ${isTranslateOn ? 'bg-[#0F4186]' : 'bg-slate-300'}`}>
-                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${isTranslateOn ? 'right-0.5' : 'left-0.5'}`} />
-                  </div>
-                  <span className={`text-[10px] font-bold ${isTranslateOn ? 'text-[#0F4186]' : 'text-slate-400'}`}>VI</span>
-                </div>
-              </button>
-              <button className="p-2.5 bg-white border border-slate-200 rounded-full hover:bg-slate-50 transition-colors">
+              <div className="flex items-center gap-2.5 bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm">
+                 <Languages className="w-3.5 h-3.5 text-blue-600" />
+                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{t('自動翻訳', 'Tự động dịch')}</span>
+                 <button 
+                    type="button"
+                    onClick={onToggleTranslate}
+                    className={`w-9 h-4.5 rounded-full relative transition-all ${isTranslateOn ? 'bg-blue-600' : 'bg-slate-300'}`}
+                    style={{ height: '18px' }}
+                 >
+                    <div className={`absolute top-[1px] w-4 h-4 bg-white rounded-full transition-all ${isTranslateOn ? 'right-[1px]' : 'left-[1px]'}`} />
+                 </button>
+                 <p className="text-[8px] font-black text-blue-600 border-l border-slate-200 pl-2">JP ↔ VN</p>
+              </div>
+              <button className="p-2.5 bg-white border border-slate-200 rounded-full hover:bg-slate-50 shadow-sm transition-colors">
                 <Bookmark className="w-5 h-5 text-slate-600" />
               </button>
-              <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-slate-200">
+              <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-slate-200 shadow-sm">
                 <img src={user.avatar} alt="Profile" />
               </div>
            </div>

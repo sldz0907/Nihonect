@@ -9,7 +9,9 @@ import {
   Star,
   Globe,
   Award,
-  Languages
+  Languages,
+  Flag,
+  X
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import Sidebar from '../components/shared/Sidebar';
@@ -77,6 +79,10 @@ export default function BuddyProfileView({
 }: BuddyProfileViewProps) {
   const [profileData, setProfileData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportType, setReportType] = useState('Spam');
+  const [reportDescription, setReportDescription] = useState('');
+  const [isReporting, setIsReporting] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -97,6 +103,40 @@ export default function BuddyProfileView({
     };
     fetchProfile();
   }, [buddyId]);
+
+  const handleReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reportDescription.trim()) return;
+    setIsReporting(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`${API_BASE_URL}/api/reports`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          reportedUserId: buddyId,
+          type: reportType,
+          description: reportDescription
+        })
+      });
+      if (res.ok) {
+        alert(t('通報を送信しました。', 'Đã gửi báo cáo thành công.'));
+        setShowReportModal(false);
+        setReportDescription('');
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || 'Error submitting report');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error submitting report');
+    } finally {
+      setIsReporting(false);
+    }
+  };
 
   const t = (ja: string, vi: string) => (isTranslateOn ? vi : ja);
 
@@ -140,6 +180,9 @@ export default function BuddyProfileView({
                  </button>
                  <p className="text-[8px] font-black text-blue-600 border-l border-slate-200 pl-2">JP ↔ VN</p>
               </div>
+              <button onClick={() => setShowReportModal(true)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors text-slate-500" title={t('ユーザーを通報', 'Báo cáo người dùng')}>
+                <Flag className="w-5 h-5" />
+              </button>
               <button className="p-2.5 hover:bg-slate-100 rounded-full transition-colors">
                 <Share2 className="w-5 h-5 text-slate-500" />
               </button>
@@ -331,6 +374,70 @@ export default function BuddyProfileView({
           </div>
         </main>
       </div>
+
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Flag className="w-5 h-5 text-red-500" />
+                {t('ユーザーを通報', 'Báo cáo người dùng')}
+              </h3>
+              <button onClick={() => setShowReportModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleReportSubmit} className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-slate-700 mb-2">{t('通報の理由', 'Lý do báo cáo')}</label>
+                <select 
+                  value={reportType} 
+                  onChange={e => setReportType(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-[#0F4186]"
+                >
+                  <option value="Spam">{t('スパム / 宣伝', 'Spam / Quảng cáo')}</option>
+                  <option value="Harassment">{t('嫌がらせ / 悪口', 'Quấy rối / Chửi bới')}</option>
+                  <option value="Fake Profile">{t('偽のアカウント', 'Tài khoản giả mạo')}</option>
+                  <option value="Inappropriate Content">{t('不適切なコンテンツ', 'Nội dung phản cảm')}</option>
+                  <option value="Other">{t('その他', 'Khác')}</option>
+                </select>
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-slate-700 mb-2">{t('詳細', 'Chi tiết (Bắt buộc)')}</label>
+                <textarea 
+                  required
+                  value={reportDescription}
+                  onChange={e => setReportDescription(e.target.value)}
+                  placeholder={t('問題の詳細を説明してください...', 'Vui lòng mô tả chi tiết vấn đề...')}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:border-[#0F4186] min-h-[120px] resize-none"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setShowReportModal(false)}
+                  className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200"
+                >
+                  {t('キャンセル', 'Hủy')}
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isReporting || !reportDescription.trim()}
+                  className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {isReporting ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : t('送信', 'Gửi báo cáo')}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

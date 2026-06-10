@@ -7,6 +7,7 @@ import eventRoutes from './routes/event.routes.js';
 import messageRoutes from './routes/message.routes.js';
 import reviewRoutes from './routes/review.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import reportRoutes from './routes/report.routes.js';
 import { requireAuth } from './middlewares/auth.middleware.js';
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/reports', reportRoutes);
 
 app.get('/api/dashboard', requireAuth, (req, res) => {
   res.status(200).json({ message: 'Dashboard data allowed.', auth: req.auth });
