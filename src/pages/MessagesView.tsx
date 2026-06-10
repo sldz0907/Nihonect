@@ -51,7 +51,12 @@ export default function MessagesView({ user, initialChatId, onNavigate, onLogout
   const [inputText, setInputText] = useState('');
   
   const isTranslateOn = isTranslateOnProp;
+  const isTranslateOnRef = useRef(isTranslateOn);
   const t = (ja: string, vi: string) => (isTranslateOn ? vi : ja);
+
+  useEffect(() => {
+    isTranslateOnRef.current = isTranslateOn;
+  }, [isTranslateOn]);
 
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -94,6 +99,11 @@ export default function MessagesView({ user, initialChatId, onNavigate, onLogout
     
     socketRef.current.on('receive_message', (msg: Message) => {
       setMessages(prev => [...prev, msg]);
+      
+      // Auto-translate incoming message if our switch is ON but it arrived untranslated
+      if (isTranslateOnRef.current && msg.translationStatus === 'none' && msg.senderId !== user.id) {
+        socketRef.current?.emit('retry_translation', { messageId: msg._id });
+      }
     });
 
     socketRef.current.on('message_translated', (data: { messageId: string, translatedText?: string, status: string }) => {
@@ -162,7 +172,8 @@ export default function MessagesView({ user, initialChatId, onNavigate, onLogout
     socketRef.current?.emit('send_message', {
       senderId: user.id,
       receiverId: activeChat,
-      text: inputText
+      text: inputText,
+      autoTranslate: isTranslateOn
     });
     
     setInputText('');
