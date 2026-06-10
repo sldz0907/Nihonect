@@ -40,7 +40,7 @@ export default function AdminSidebar({ currentView, onNavigate, onLogout }: Admi
     <div className="w-[280px] bg-[#0F4186] text-white h-full flex flex-col p-8 shadow-2xl relative z-20">
       <div className="mb-16 mt-4">
         <h1 className="text-3xl font-black tracking-tighter">Nihonect</h1>
-        <p className="text-[10px] text-blue-300 font-black tracking-[0.3em] uppercase mt-2">Admin Portal</p>
+        <p className="text-[10px] text-blue-300 font-black tracking-[0.3em] uppercase mt-2">管理者ポータル</p>
       </div>
 
       <nav className="flex-1 space-y-3">

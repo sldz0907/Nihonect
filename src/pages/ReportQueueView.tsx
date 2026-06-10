@@ -87,13 +87,16 @@ export default function ReportQueueView({ user, onNavigate, onLogout }: ReportQu
     }
   };
 
+  const pendingCount = reports.filter(r => r.status === 'pending').length;
+  const resolvedCount = reports.filter(r => r.status === 'resolved').length;
+
   return (
     <div className="pb-20 max-w-7xl mx-auto">
       <header className="p-10 pb-4">
            <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-4xl font-extrabold text-[#0F4186] tracking-tight mb-2">通報キュー</h1>
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-none">違反管理 — 24件のコミュニティ安全通報が保留中です。</p>
+                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-none">違反管理 — {pendingCount}件のコミュニティ安全通報が保留中です。</p>
               </div>
               <div className="flex gap-3">
                  <button className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all">
@@ -110,12 +113,12 @@ export default function ReportQueueView({ user, onNavigate, onLogout }: ReportQu
            <div className="grid grid-cols-2 gap-8 mb-12">
               <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm relative overflow-hidden group">
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">保留中</p>
-                 <h2 className="text-5xl font-black text-[#0F4186]">24</h2>
+                 <h2 className="text-5xl font-black text-[#0F4186]">{pendingCount}</h2>
                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
               </div>
               <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm relative overflow-hidden group">
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">本日の解決済み</p>
-                 <h2 className="text-5xl font-black text-slate-900">142</h2>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">解決済み</p>
+                 <h2 className="text-5xl font-black text-slate-900">{resolvedCount}</h2>
                  <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
               </div>
            </div>
@@ -199,7 +202,7 @@ export default function ReportQueueView({ user, onNavigate, onLogout }: ReportQu
               </div>
 
               <div className="p-8 border-t border-slate-50 flex items-center justify-between">
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">24件中 1-3件を表示中</p>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{reports.length}件の通報</p>
                  <div className="flex gap-2">
                     <button className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:bg-slate-50 transition-all"><ChevronLeft className="w-5 h-5" /></button>
                     <button className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:bg-slate-100 transition-all"><ChevronRight className="w-5 h-5" /></button>

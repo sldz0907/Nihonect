@@ -2,6 +2,7 @@ import { UserModel } from '../models/User.js';
 import { EventModel } from '../models/Event.js';
 import { ReviewModel } from '../models/Review.js';
 import { MessageModel } from '../models/Message.js';
+import { ReportModel } from '../models/Report.js';
 
 export class AdminService {
   static async getStats() {
@@ -14,7 +15,7 @@ export class AdminService {
     ]);
     const newMatches = usersWithFriends.length > 0 ? Math.floor(usersWithFriends[0].total / 2) : 0;
 
-    const reports = 0;
+    const reports = await ReportModel.countDocuments({ status: 'pending' });
 
     const recentUsers = await UserModel.find({ role: 'user' })
       .sort({ createdAt: -1 })

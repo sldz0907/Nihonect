@@ -448,14 +448,14 @@ export default function BuddyProfileView({
             initial={{ opacity: 0, y: 50, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
             exit={{ opacity: 0, y: 20, x: '-50%' }}
-            className="fixed bottom-10 left-1/2 z-[100] bg-[#0F4186] text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-4"
+            className="fixed bottom-10 left-1/2 z-[100] bg-white text-slate-900 px-6 py-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-4 min-w-[320px]"
           >
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-              <CheckCircle2 className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
             </div>
             <div>
-              <p className="font-bold text-sm">通報を送信しました。</p>
-              <p className="text-[10px] text-blue-200">管理者が確認後、適切に対処いたします。</p>
+              <p className="font-bold text-sm text-slate-900">通報を送信しました。</p>
+              <p className="text-[10px] text-slate-500 font-medium">管理者が確認後、適切に対処いたします。</p>
             </div>
           </motion.div>
         )}
