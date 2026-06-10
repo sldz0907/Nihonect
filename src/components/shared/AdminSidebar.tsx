@@ -52,8 +52,8 @@ export default function AdminSidebar({ currentView, onNavigate, onLogout }: Admi
               key={item.id}
               onClick={() => onNavigate(item.id)}
               className={`w-full flex items-center gap-4 px-5 py-4 rounded-[20px] transition-all font-bold text-sm ${isActive
-                  ? 'bg-white text-[#0F4186] shadow-xl shadow-black/10 translate-x-2'
-                  : 'text-blue-200 hover:text-white hover:bg-white/10'
+                ? 'bg-white text-[#0F4186] shadow-xl shadow-black/10 translate-x-2'
+                : 'text-blue-200 hover:text-white hover:bg-white/10'
                 }`}
             >
               <Icon className={`w-5 h-5 ${isActive ? 'text-[#0F4186]' : 'text-blue-300'}`} />

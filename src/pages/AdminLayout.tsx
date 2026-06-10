@@ -4,8 +4,8 @@ import AdminSidebar from '../components/shared/AdminSidebar';
 import AdminDashboardView from './AdminDashboardView';
 import AdminUserManagement from './AdminUserManagement';
 import AdminEventForm from './AdminEventForm';
-
 import AdminEventManagement from './AdminEventManagement';
+import ReportQueueView from './ReportQueueView';
 
 interface AdminLayoutProps {
   user: User;
@@ -25,6 +25,7 @@ export default function AdminLayout({ user, onLogout, initialView = View.ADMIN_D
         {currentView === View.ADMIN_USERS && <AdminUserManagement />}
         {currentView === View.ADMIN_EVENTS && <AdminEventForm />}
         {currentView === View.ADMIN_EVENT_MANAGEMENT && <AdminEventManagement />}
+        {currentView === View.REPORT_QUEUE && <ReportQueueView user={user} onNavigate={setCurrentView} onLogout={onLogout} />}
       </div>
     </div>
   );

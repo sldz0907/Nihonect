@@ -11,9 +11,10 @@ import {
   Award,
   Languages,
   Flag,
-  X
+  X,
+  CheckCircle2
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import Sidebar from '../components/shared/Sidebar';
 
 const livingAreaMap: Record<string, string> = {
@@ -83,6 +84,7 @@ export default function BuddyProfileView({
   const [reportType, setReportType] = useState('Spam');
   const [reportDescription, setReportDescription] = useState('');
   const [isReporting, setIsReporting] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -123,7 +125,8 @@ export default function BuddyProfileView({
         })
       });
       if (res.ok) {
-        alert(t('通報を送信しました。', 'Đã gửi báo cáo thành công.'));
+        setShowSuccessToast(true);
+        setTimeout(() => setShowSuccessToast(false), 3000);
         setShowReportModal(false);
         setReportDescription('');
       } else {
@@ -438,6 +441,25 @@ export default function BuddyProfileView({
           </motion.div>
         </div>
       )}
+
+      <AnimatePresence>
+        {showSuccessToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 20, x: '-50%' }}
+            className="fixed bottom-10 left-1/2 z-[100] bg-[#0F4186] text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-4"
+          >
+            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+              <CheckCircle2 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-sm">通報を送信しました。</p>
+              <p className="text-[10px] text-blue-200">管理者が確認後、適切に対処いたします。</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

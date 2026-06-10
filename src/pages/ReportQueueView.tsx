@@ -15,7 +15,7 @@ import {
   ExternalLink,
   Search
 } from 'lucide-react';
-import Sidebar from '../components/shared/Sidebar';
+import Sidebar from '../components/shared/Sidebar'; // We can remove this later but let's keep the import and just remove it from render
 
 interface ReportQueueViewProps {
   user: User;
@@ -88,11 +88,8 @@ export default function ReportQueueView({ user, onNavigate, onLogout }: ReportQu
   };
 
   return (
-    <div className="flex bg-[#F8FAFC] h-screen overflow-hidden">
-      <Sidebar currentView={View.REPORT_QUEUE} onNavigate={onNavigate} onLogout={onLogout} role="ADMIN" />
-      
-      <div className="flex-1 overflow-y-auto">
-        <header className="p-10 pb-4">
+    <div className="pb-20 max-w-7xl mx-auto">
+      <header className="p-10 pb-4">
            <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-4xl font-extrabold text-[#0F4186] tracking-tight mb-2">通報キュー</h1>
@@ -239,7 +236,6 @@ export default function ReportQueueView({ user, onNavigate, onLogout }: ReportQu
               <button className="hover:text-[#0F4186]">コミュニティ規定</button>
            </div>
         </footer>
-      </div>
     </div>
   );
 }
