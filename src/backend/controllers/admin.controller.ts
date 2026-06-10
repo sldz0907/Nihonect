@@ -75,4 +75,41 @@ export class AdminController {
       res.status(500).json({ error: error.message });
     }
   }
+
+  static async deleteEvent(req: Request, res: Response): Promise<any> {
+    try {
+      const eventId = req.params.eventId;
+      const event = await EventModel.findByIdAndDelete(eventId);
+      if (!event) return res.status(404).json({ message: 'Event not found' });
+      res.json({ message: 'Event deleted successfully' });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  static async notifyEvent(req: Request, res: Response): Promise<any> {
+    try {
+      const eventId = req.params.eventId;
+      const { message } = req.body;
+      const event = await EventModel.findById(eventId);
+      if (!event) return res.status(404).json({ message: 'Event not found' });
+
+      if (!event.attendees || event.attendees.length === 0) {
+        return res.status(400).json({ message: 'No attendees to notify' });
+      }
+
+      const notif = new NotificationModel({
+        type: 'new_event', // Reusing this type so it shows the bell icon
+        title: `イベントの変更: ${event.title}`,
+        message: message,
+        relatedId: event._id,
+        targetUsers: event.attendees
+      });
+      await notif.save();
+
+      res.json({ message: 'Notification sent successfully' });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  }
 }

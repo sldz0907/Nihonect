@@ -5,6 +5,8 @@ import AdminDashboardView from './AdminDashboardView';
 import AdminUserManagement from './AdminUserManagement';
 import AdminEventForm from './AdminEventForm';
 
+import AdminEventManagement from './AdminEventManagement';
+
 interface AdminLayoutProps {
   user: User;
   onLogout?: () => void;
@@ -22,11 +24,7 @@ export default function AdminLayout({ user, onLogout, initialView = View.ADMIN_D
         {currentView === View.ADMIN_DASHBOARD && <AdminDashboardView />}
         {currentView === View.ADMIN_USERS && <AdminUserManagement />}
         {currentView === View.ADMIN_EVENTS && <AdminEventForm />}
-        {currentView === View.ADMIN_SETTINGS && (
-          <div className="p-8 flex items-center justify-center h-full">
-            <p className="text-slate-400 font-black uppercase tracking-widest text-sm bg-white px-8 py-4 rounded-3xl shadow-sm border border-slate-100">設定画面（近日公開）</p>
-          </div>
-        )}
+        {currentView === View.ADMIN_EVENT_MANAGEMENT && <AdminEventManagement />}
       </div>
     </div>
   );

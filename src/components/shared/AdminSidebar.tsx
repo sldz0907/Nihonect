@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { View } from '../../types';
-import { 
+import {
   LayoutDashboard, 
   Users, 
   CalendarPlus, 
-  Settings,
+  CalendarDays,
   LogOut
 } from 'lucide-react';
 import { logout } from '../../services/authApi';
@@ -31,7 +31,7 @@ export default function AdminSidebar({ currentView, onNavigate, onLogout }: Admi
     { id: View.ADMIN_DASHBOARD, label: 'システム概要', icon: LayoutDashboard },
     { id: View.ADMIN_USERS, label: 'ユーザー管理', icon: Users },
     { id: View.ADMIN_EVENTS, label: 'イベント作成', icon: CalendarPlus },
-    { id: View.ADMIN_SETTINGS, label: '設定', icon: Settings },
+    { id: View.ADMIN_EVENT_MANAGEMENT, label: 'イベント管理', icon: CalendarDays },
   ];
 
   return (

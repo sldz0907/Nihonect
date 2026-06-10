@@ -127,7 +127,12 @@ export class UserController {
 
       const eventNotifs = await NotificationModel.find({
         type: 'new_event',
-        readBy: { $ne: userId }
+        readBy: { $ne: userId },
+        $or: [
+          { targetUsers: { $exists: false } },
+          { targetUsers: { $size: 0 } },
+          { targetUsers: userId }
+        ]
       }).sort({ createdAt: -1 });
 
       const notifications = eventNotifs.map(n => ({

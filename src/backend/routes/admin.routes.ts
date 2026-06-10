@@ -18,5 +18,7 @@ router.post('/events', (req, res, next) => {
     next();
   });
 }, AdminController.createEvent);
+router.delete('/events/:eventId', AdminController.deleteEvent);
+router.post('/events/:eventId/notify', AdminController.notifyEvent);
 
 export default router;
