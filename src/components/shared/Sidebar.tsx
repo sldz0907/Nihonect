@@ -78,10 +78,7 @@ export default function Sidebar({ currentView, onNavigate, onLogout, role }: Sid
       </nav>
 
       <div className="pt-8 border-t border-slate-100 space-y-1">
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all">
-          <HelpCircle className="w-5 h-5 text-slate-400" />
-          <span className="text-sm">ヘルプ</span>
-        </button>
+
         <button 
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all"
