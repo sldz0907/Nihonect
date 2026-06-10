@@ -128,12 +128,9 @@ async function bootstrap() {
         const { senderId, receiverId, text } = data;
         const room = [senderId, receiverId].sort().join('_');
 
-        const message = new MessageModel({ senderId, receiverId, text, translationStatus: 'translating' });
+        const message = new MessageModel({ senderId, receiverId, text, translationStatus: 'none' });
         await message.save();
         io.to(room).emit('receive_message', message);
-
-        translationQueue.push({ messageId: message._id.toString(), text, room });
-        processTranslationQueue(io);
       } catch (e) {
         console.error('Socket send_message error:', e);
       }
