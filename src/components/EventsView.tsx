@@ -138,7 +138,7 @@ export default function EventsView({ user, onNavigate, onLogout, isTranslateOn, 
            </div>
 
            <div className="flex gap-3 mb-12 overflow-x-auto pb-4 scrollbar-hide">
-              {[{ id: 'all', label: t('近日開催のイベント', 'Sự kiện sắp tới') }, { id: 'Workshop', label: t('ワークショップ', 'Hội thảo') }, { id: 'Language Exchange', label: t('言語交換', 'Trao đổi ngôn ngữ') }, { id: 'Networking', label: t('交流会', 'Giao lưu') }].map((cat) => (
+              {[{ id: 'all', label: t('近日開催のイベント', 'Sự kiện sắp tới') }, { id: 'Culture', label: t('文化', 'Văn hóa') }, { id: 'Workshop', label: t('ワークショップ', 'Hội thảo') }, { id: 'Language Exchange', label: t('言語交換', 'Trao đổi ngôn ngữ') }, { id: 'Networking', label: t('交流会', 'Giao lưu') }].map((cat) => (
                 <button 
                    key={cat.id} 
                    onClick={() => setSelectedCategory(cat.id)}
