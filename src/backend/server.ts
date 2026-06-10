@@ -38,6 +38,60 @@ async function translateText(text: string): Promise<string> {
   return translatedText;
 }
 
+interface TranslationTask {
+  messageId: string;
+  text: string;
+  room: string;
+}
+
+const translationQueue: TranslationTask[] = [];
+let isProcessingQueue = false;
+
+async function processTranslationQueue(io: SocketIOServer) {
+  if (isProcessingQueue || translationQueue.length === 0) return;
+  isProcessingQueue = true;
+
+  while (translationQueue.length > 0) {
+    const task = translationQueue.shift();
+    if (!task) continue;
+
+    try {
+      const message = await MessageModel.findById(task.messageId);
+      if (!message) continue;
+
+      const translated = await translateText(task.text);
+
+      if (translated) {
+        message.translatedText = translated;
+        message.translationStatus = 'success';
+        await message.save();
+        io.to(task.room).emit('message_translated', { messageId: message._id, translatedText: translated, status: 'success' });
+      } else {
+        message.translationStatus = 'failed';
+        await message.save();
+        io.to(task.room).emit('message_translated', { messageId: message._id, status: 'failed' });
+      }
+    } catch (err) {
+      console.error('Translation queue error:', err);
+      try {
+        const message = await MessageModel.findById(task.messageId);
+        if (message) {
+          message.translationStatus = 'failed';
+          await message.save();
+          io.to(task.room).emit('message_translated', { messageId: message._id, status: 'failed' });
+        }
+      } catch (innerErr) {
+        console.error('Inner queue error:', innerErr);
+      }
+    }
+
+    // Delay 2 seconds between translations to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+
+  isProcessingQueue = false;
+}
+
 async function bootstrap() {
   const PORT = process.env.PORT || 4000;
   connectToDatabase().catch(err => {
@@ -67,23 +121,8 @@ async function bootstrap() {
         await message.save();
         io.to(room).emit('receive_message', message);
 
-        translateText(text).then(async (translated) => {
-          if (translated) {
-            message.translatedText = translated;
-            message.translationStatus = 'success';
-            await message.save();
-            io.to(room).emit('message_translated', { messageId: message._id, translatedText: translated, status: 'success' });
-          } else {
-            message.translationStatus = 'failed';
-            await message.save();
-            io.to(room).emit('message_translated', { messageId: message._id, status: 'failed' });
-          }
-        }).catch(async (err) => {
-          console.error('Translation process error:', err);
-          message.translationStatus = 'failed';
-          await message.save();
-          io.to(room).emit('message_translated', { messageId: message._id, status: 'failed' });
-        });
+        translationQueue.push({ messageId: message._id.toString(), text, room });
+        processTranslationQueue(io);
       } catch (e) {
         console.error('Socket send_message error:', e);
       }
@@ -101,23 +140,8 @@ async function bootstrap() {
         await message.save();
         io.to(room).emit('message_translated', { messageId: message._id, status: 'translating' });
 
-        translateText(message.text).then(async (translated) => {
-          if (translated) {
-            message.translatedText = translated;
-            message.translationStatus = 'success';
-            await message.save();
-            io.to(room).emit('message_translated', { messageId: message._id, translatedText: translated, status: 'success' });
-          } else {
-            message.translationStatus = 'failed';
-            await message.save();
-            io.to(room).emit('message_translated', { messageId: message._id, status: 'failed' });
-          }
-        }).catch(async (err) => {
-          console.error('Translation retry process error:', err);
-          message.translationStatus = 'failed';
-          await message.save();
-          io.to(room).emit('message_translated', { messageId: message._id, status: 'failed' });
-        });
+        translationQueue.push({ messageId: message._id.toString(), text: message.text, room });
+        processTranslationQueue(io);
       } catch (e) {
         console.error('Socket retry_translation error:', e);
       }
