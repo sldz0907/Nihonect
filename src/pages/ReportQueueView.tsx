@@ -154,12 +154,12 @@ export default function ReportQueueView({ user, onNavigate, onLogout }: ReportQu
                                <div className="flex items-center gap-3">
                                   <div className="text-right">
                                      <p className="text-[9px] font-bold text-slate-300 uppercase leading-none mb-1">通報者</p>
-                                     <p className="text-xs font-bold text-slate-700">{report.reporter?.name || 'Unknown'}</p>
+                                     <p className="text-xs font-bold text-slate-700">{report.reporter?.fullName || 'Unknown'}</p>
                                   </div>
                                   <ArrowRightIcon className="w-4 h-4 text-slate-200" />
                                   <div className="text-left">
                                      <p className="text-[9px] font-bold text-rose-300 uppercase leading-none mb-1">対象者</p>
-                                     <p className="text-xs font-bold text-rose-950">{report.reportedUser?.name || 'Unknown'}</p>
+                                     <p className="text-xs font-bold text-rose-950">{report.reportedUser?.fullName || 'Unknown'}</p>
                                   </div>
                                </div>
                             </td>

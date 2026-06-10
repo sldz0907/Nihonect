@@ -37,8 +37,8 @@ export const createReport = async (req: Request, res: Response): Promise<void> =
 export const getReports = async (req: Request, res: Response): Promise<void> => {
   try {
     const reports = await ReportModel.find()
-      .populate('reporter', 'name email avatar')
-      .populate('reportedUser', 'name email avatar')
+      .populate('reporter', 'fullName email profilePicture')
+      .populate('reportedUser', 'fullName email profilePicture')
       .sort({ createdAt: -1 });
     res.status(200).json({ reports });
   } catch (error) {
