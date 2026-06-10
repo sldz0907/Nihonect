@@ -301,9 +301,9 @@ export default function MessagesView({ user, initialChatId, onNavigate, onLogout
                                        {msg.translatedText}
                                     </div>
                                   )}
-                                  {isTranslateOn && msg.translationStatus === 'failed' && (
+                                  {isTranslateOn && !msg.translatedText && msg.translationStatus !== 'translating' && (
                                     <div className="pt-3 mt-3 border-t border-white/20 flex items-center justify-between">
-                                       <span className="italic text-[11px] text-red-300 font-medium">{t('翻訳失敗', 'Lỗi dịch')}</span>
+                                       <span className="italic text-[11px] text-red-300 font-medium">{msg.translationStatus === 'failed' ? t('翻訳失敗', 'Lỗi dịch') : t('未翻訳', 'Chưa dịch')}</span>
                                        <button onClick={() => socketRef.current?.emit('retry_translation', { messageId: msg._id })} className="text-[10px] bg-white/20 hover:bg-white/30 px-2 py-1 rounded text-white transition-colors">{t('再翻訳', 'Dịch lại')}</button>
                                     </div>
                                   )}
@@ -336,9 +336,9 @@ export default function MessagesView({ user, initialChatId, onNavigate, onLogout
                                        {msg.translatedText}
                                     </div>
                                   )}
-                                  {isTranslateOn && msg.translationStatus === 'failed' && (
+                                  {isTranslateOn && !msg.translatedText && msg.translationStatus !== 'translating' && (
                                     <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
-                                       <span className="italic text-[11px] text-red-500 font-medium">{t('翻訳失敗', 'Lỗi dịch')}</span>
+                                       <span className="italic text-[11px] text-red-500 font-medium">{msg.translationStatus === 'failed' ? t('翻訳失敗', 'Lỗi dịch') : t('未翻訳', 'Chưa dịch')}</span>
                                        <button onClick={() => socketRef.current?.emit('retry_translation', { messageId: msg._id })} className="text-[10px] bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded text-slate-700 transition-colors">{t('再翻訳', 'Dịch lại')}</button>
                                     </div>
                                   )}
