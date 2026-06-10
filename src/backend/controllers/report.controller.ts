@@ -5,7 +5,7 @@ import { UserModel } from '../models/User.js';
 export const createReport = async (req: Request, res: Response): Promise<void> => {
   try {
     const { reportedUserId, type, description, severity } = req.body;
-    const reporterId = (req as any).user.id;
+    const reporterId = (req as any).auth?.sub;
 
     if (!reportedUserId || !type || !description) {
       res.status(400).json({ message: 'Missing required fields' });
