@@ -13,15 +13,14 @@ interface EventsViewProps {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
-export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewProps) {
+export default function EventsView({ user, onNavigate, onLogout, isTranslateOn, onToggleTranslate }: EventsViewProps) {
+  const t = (ja: string, vi: string) => (isTranslateOn ? vi : ja);
   const [events, setEvents] = useState<any[]>([]);
   const [featuredEvent, setFeaturedEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-
-  
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -68,7 +67,7 @@ export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewP
         }
       } else {
         const err = await res.json();
-        alert(`エラー: ${err.message}`);
+        alert(t(`エラー: ${err.message}`, `Lỗi: ${err.message}`));
       }
     } catch (e) {
       console.error(e);
@@ -103,11 +102,24 @@ export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewP
                 type="text" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={'イベントを検索...'}
+                placeholder={t('イベントを検索...', 'Tìm kiếm sự kiện...')}
                 className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:border-[#0F4186] transition-all"
               />
            </div>
            <div className="flex items-center gap-4">
+              <button 
+                onClick={onToggleTranslate}
+                className="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+              >
+                <Languages className={`w-4 h-4 ${isTranslateOn ? 'text-[#0F4186]' : 'text-slate-400'}`} />
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[10px] font-bold ${!isTranslateOn ? 'text-slate-600' : 'text-slate-400'}`}>JA</span>
+                  <div className={`w-8 h-4 rounded-full relative transition-all ${isTranslateOn ? 'bg-[#0F4186]' : 'bg-slate-300'}`}>
+                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${isTranslateOn ? 'right-0.5' : 'left-0.5'}`} />
+                  </div>
+                  <span className={`text-[10px] font-bold ${isTranslateOn ? 'text-[#0F4186]' : 'text-slate-400'}`}>VI</span>
+                </div>
+              </button>
               <button className="p-2.5 bg-white border border-slate-200 rounded-full hover:bg-slate-50 transition-colors">
                 <Bookmark className="w-5 h-5 text-slate-600" />
               </button>
@@ -119,14 +131,14 @@ export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewP
 
         <main className="max-w-6xl mx-auto p-12">
            <div className="mb-12">
-              <h1 className="text-4xl font-extrabold text-[#0F4186] mb-4 tracking-tight leading-none">{'文化の架け橋'} <span className="text-slate-400 font-light">{'ハノイ'}</span></h1>
+              <h1 className="text-4xl font-extrabold text-[#0F4186] mb-4 tracking-tight leading-none">{t('文化の架け橋', 'Cầu nối văn hóa')} <span className="text-slate-400 font-light">{t('ハノイ', 'Hà Nội')}</span></h1>
               <p className="text-slate-500 max-w-2xl leading-relaxed">
-                {'日本とベトナムのコミュニティを繋ぐ、最高の言語交換ミートアップ、文化ワークショップ、ネットワーキングイベントを見つけましょう。'}
+                {t('日本とベトナムのコミュニティを繋ぐ、最高の言語交換ミートアップ、文化ワークショップ、ネットワーキングイベントを見つけましょう。', 'Tìm kiếm các buổi giao lưu ngôn ngữ, hội thảo văn hóa, và sự kiện kết nối tốt nhất giữa cộng đồng Nhật Bản và Việt Nam.')}
               </p>
            </div>
 
            <div className="flex gap-3 mb-12 overflow-x-auto pb-4 scrollbar-hide">
-              {[{ id: 'all', label: '近日開催のイベント' }, { id: 'Workshop', label: 'ワークショップ' }, { id: 'Language Exchange', label: '言語交換' }, { id: 'Networking', label: '交流会' }].map((cat) => (
+              {[{ id: 'all', label: t('近日開催のイベント', 'Sự kiện sắp tới') }, { id: 'Workshop', label: t('ワークショップ', 'Hội thảo') }, { id: 'Language Exchange', label: t('言語交換', 'Trao đổi ngôn ngữ') }, { id: 'Networking', label: t('交流会', 'Giao lưu') }].map((cat) => (
                 <button 
                    key={cat.id} 
                    onClick={() => setSelectedCategory(cat.id)}
@@ -143,23 +155,23 @@ export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewP
               {/* Event List */}
               <div className="flex-1 space-y-8">
                   <div className="flex items-center justify-between mb-2">
-                     <h2 className="text-xl font-bold text-slate-900">{'すべてのイベントを閲覧'}</h2>
-                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{`${filteredEvents.length}件のイベントが見つかりました`}</span>
+                     <h2 className="text-xl font-bold text-slate-900">{t('すべてのイベントを閲覧', 'Xem tất cả sự kiện')}</h2>
+                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t(`${filteredEvents.length}件のイベントが見つかりました`, `Đã tìm thấy ${filteredEvents.length} sự kiện`)}</span>
                   </div>
 
                   {loading && <div className="p-8 text-center"><Loader2 className="w-8 h-8 text-[#0F4186] animate-spin mx-auto" /></div>}
-                  {!loading && filteredEvents.length === 0 && <div className="p-8 text-center text-slate-500">{'イベントがありません。'}</div>}
+                  {!loading && filteredEvents.length === 0 && <div className="p-8 text-center text-slate-500">{t('イベントがありません。', 'Không có sự kiện nào.')}</div>}
 
                   {!loading && filteredEvents.map((event) => (
                      <div key={event._id} onClick={() => setFeaturedEvent(event)} className="bg-white rounded-[32px] overflow-hidden border border-slate-100 shadow-sm flex group cursor-pointer hover:shadow-xl hover:shadow-blue-900/5 transition-all">
                         <div className="w-48 relative overflow-hidden">
                            <img src={event.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" />
-                           <div className="absolute top-4 left-4 bg-rose-500 text-white text-[9px] font-bold px-2 py-1 rounded shadow-lg uppercase tracking-widest">{'注目イベント'}</div>
+                           <div className="absolute top-4 left-4 bg-rose-500 text-white text-[9px] font-bold px-2 py-1 rounded shadow-lg uppercase tracking-widest">{t('注目イベント', 'Sự kiện nổi bật')}</div>
                         </div>
                         <div className="p-8 flex-1 flex flex-col">
                            <div className="flex justify-between items-start mb-4">
                               <div>
-                                 <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-2">{'文化 • CULTURE'}</p>
+                                 <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-2">{t('文化', 'Văn hóa')}</p>
                                  <h3 className="text-xl font-bold text-slate-900 leading-tight mb-2 group-hover:text-[#0F4186] transition-colors">{event.title}</h3>
                               </div>
                               <button className="p-2 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
@@ -178,16 +190,16 @@ export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewP
                               </div>
                               <div className="flex items-center gap-2 text-xs font-medium text-slate-400 mt-2">
                                  <Tag className="w-3.5 h-3.5" />
-                                 <span>{event.price || '無料'} • {event.format || 'オフライン'}</span>
+                                 <span>{event.price || t('無料', 'Miễn phí')} • {event.format || t('オフライン', 'Trực tiếp')}</span>
                               </div>
                            </div>
 
                            <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
                               <div className="flex -space-x-2">
-                                 <div className="w-6 h-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[8px] font-bold text-[#0F4186]">{(event.attendees?.length || 0)}{'人'}</div>
+                                 <div className="w-6 h-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[8px] font-bold text-[#0F4186]">{(event.attendees?.length || 0)}{t('人', ' người')}</div>
                               </div>
                               <button className="flex items-center gap-2 px-6 py-2 border-2 border-slate-50 rounded-xl text-xs font-bold text-slate-600 hover:border-[#0F4186] hover:bg-blue-50/30 hover:text-[#0F4186] transition-all group/btn">
-                                 <span>{'詳細を見る'}</span>
+                                 <span>{t('詳細を見る', 'Xem chi tiết')}</span>
                                  <ChevronRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
                               </button>
                            </div>
@@ -214,8 +226,8 @@ export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewP
                             <div className="flex items-center gap-4">
                                <img src={featuredEvent.createdBy?.profilePicture || DEFAULT_AVATAR} className="w-12 h-12 rounded-2xl object-cover border-2 border-slate-50" alt="" />
                                <div>
-                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">{'主催者'}</p>
-                                  <p className="text-sm font-bold text-slate-900">{featuredEvent.createdBy?.fullName || '管理者'}</p>
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">{t('主催者', 'Người tổ chức')}</p>
+                                  <p className="text-sm font-bold text-slate-900">{featuredEvent.createdBy?.fullName || t('管理者', 'Quản trị viên')}</p>
                                </div>
                             </div>
                             <div className="flex gap-2">
@@ -247,7 +259,7 @@ export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewP
                                   <Users className="w-5 h-5" />
                                </div>
                                <div>
-                                  <p className="text-sm font-bold text-slate-900">{featuredEvent.capacity > 0 ? `定員: ${featuredEvent.capacity}名` : '定員: 制限なし'}</p>
+                                  <p className="text-sm font-bold text-slate-900">{featuredEvent.capacity > 0 ? t(`定員: ${featuredEvent.capacity}名`, `Số lượng: ${featuredEvent.capacity} người`) : t('定員: 制限なし', 'Số lượng: Không giới hạn')}</p>
                                </div>
                             </div>
                             
@@ -256,8 +268,8 @@ export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewP
                                   <Tag className="w-5 h-5" />
                                </div>
                                <div>
-                                  <p className="text-sm font-bold text-slate-900">{featuredEvent.price || '無料'}</p>
-                                  <p className="text-xs font-bold text-slate-400 mt-1">{featuredEvent.format || 'オフライン'}</p>
+                                  <p className="text-sm font-bold text-slate-900">{featuredEvent.price || t('無料', 'Miễn phí')}</p>
+                                  <p className="text-xs font-bold text-slate-400 mt-1">{featuredEvent.format || t('オフライン', 'Trực tiếp')}</p>
                                </div>
                             </div>
                             
@@ -267,7 +279,7 @@ export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewP
                                     <Globe className="w-5 h-5" />
                                  </div>
                                  <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">言語要件</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">{t('言語要件', 'Yêu cầu ngôn ngữ')}</p>
                                     <p className="text-sm font-bold text-slate-900">{featuredEvent.languageRequirement}</p>
                                  </div>
                               </div>
@@ -275,7 +287,7 @@ export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewP
                          </div>
 
                          <div className="bg-slate-50/50 rounded-3xl p-6 mb-10 space-y-4">
-                            <h4 className="text-sm font-bold text-slate-900">{'イベントについて • About the event'}</h4>
+                            <h4 className="text-sm font-bold text-slate-900">{t('イベントについて', 'Về sự kiện')}</h4>
                             <p className="text-xs text-slate-500 leading-relaxed font-medium">
                                {featuredEvent.description}
                             </p>
@@ -287,18 +299,18 @@ export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewP
                             className="w-full py-5 bg-[#0F4186] text-white rounded-3xl font-black uppercase tracking-widest shadow-2xl shadow-blue-500/30 hover:scale-[1.02] active:scale-95 transition-all text-sm disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center"
                          >
                             {joining ? <Loader2 className="w-5 h-5 animate-spin" /> : 
-                             new Date(featuredEvent.date) < new Date() ? 'イベントは終了しました' :
-                             (featuredEvent.attendees || []).includes(user.id) ? '参加登録済み' : 'このイベントに参加する • Join'}
+                             new Date(featuredEvent.date) < new Date() ? t('イベントは終了しました', 'Sự kiện đã kết thúc') :
+                             (featuredEvent.attendees || []).includes(user.id) ? t('参加登録済み', 'Đã đăng ký tham gia') : t('このイベントに参加する', 'Tham gia sự kiện này')}
                          </button>
-                         <p className="text-center text-[10px] font-bold text-slate-400 mt-4">{`すでに${featuredEvent.attendees?.length || 0}人が申し込みました`}</p>
+                         <p className="text-center text-[10px] font-bold text-slate-400 mt-4">{t(`すでに${featuredEvent.attendees?.length || 0}人が申し込みました`, `Đã có ${featuredEvent.attendees?.length || 0} người đăng ký`)}</p>
 
                          <div className="mt-8 p-5 bg-rose-50/50 rounded-3xl border border-rose-100 flex items-start gap-4">
                             <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-sm">
                               <Zap className="w-5 h-5 text-rose-500" />
                             </div>
                             <div>
-                              <p className="text-[11px] font-bold text-rose-800 leading-none mb-1">{'マッチしました！'}</p>
-                              <p className="text-[10px] text-rose-500 font-medium">{'あなたの「バディ」が3人このイベントに参加予定です。'}</p>
+                              <p className="text-[11px] font-bold text-rose-800 leading-none mb-1">{t('マッチしました！', 'Đã ghép đôi!')}</p>
+                              <p className="text-[10px] text-rose-500 font-medium">{t('あなたの「バディ」が3人このイベントに参加予定です。', '3 "bạn thân" của bạn dự kiến tham gia sự kiện này.')}</p>
                             </div>
                          </div>
                       </div>
@@ -314,9 +326,9 @@ export default function EventsView({ user, onNavigate, onLogout,  }: EventsViewP
                <p>{'© 2024 Nihonect. ハノイと東京を繋ぐ。'}</p>
             </div>
             <div className="flex gap-12 items-center">
-               <button className="hover:text-slate-600 transition-colors">{'プライバシー'}</button>
-               <button className="hover:text-slate-600 transition-colors">{'利用規約'}</button>
-               <button className="hover:text-slate-600 transition-colors">{'コミュニティガイドライン'}</button>
+               <button className="hover:text-slate-600 transition-colors">{t('プライバシー', 'Quyền riêng tư')}</button>
+               <button className="hover:text-slate-600 transition-colors">{t('利用規約', 'Điều khoản sử dụng')}</button>
+               <button className="hover:text-slate-600 transition-colors">{t('コミュニティガイドライン', 'Nguyên tắc cộng đồng')}</button>
                <div className="flex gap-4">
                   <button className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Globe className="w-4 h-4" /></button>
                   <button className="p-2 hover:bg-slate-100 rounded-full transition-colors"><Sparkles className="w-4 h-4" /></button>

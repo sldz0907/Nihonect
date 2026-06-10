@@ -20,8 +20,8 @@ files.forEach(file => {
 
   const fixQuotes = /fetch\(`\$\{API_BASE_URL\}\/api\/([^']*)'/g;
   if (fixQuotes.test(content)) {
-     content = content.replace(fixQuotes, "fetch(`${API_BASE_URL}/api/$1`");
-     changed = true;
+    content = content.replace(fixQuotes, "fetch(`${API_BASE_URL}/api/$1`");
+    changed = true;
   }
 
   if (changed) {
