@@ -80,8 +80,10 @@ export default function EventsView({ user, onNavigate, onLogout, isTranslateOn, 
     // Matches category pill or title filter
     const matchCategory = selectedCategory === 'all' 
       || e.category === selectedCategory 
-      || (selectedCategory === 'Networking' && e.category === 'Exchange')
-      || (selectedCategory === 'Language Exchange' && e.category === 'Language')
+      || (selectedCategory === 'Culture' && e.category && e.category.includes('文化'))
+      || (selectedCategory === 'Networking' && e.category && (e.category === 'Exchange' || e.category.includes('交流')))
+      || (selectedCategory === 'Language Exchange' && e.category && (e.category === 'Language' || e.category.includes('言語')))
+      || (selectedCategory === 'Workshop' && e.category && e.category.includes('ワークショップ'))
       || (e.title && e.title.includes(selectedCategory))
       || (e.category && e.category.toLowerCase().includes(selectedCategory.toLowerCase()));
     
