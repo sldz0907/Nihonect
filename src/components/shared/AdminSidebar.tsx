@@ -64,12 +64,12 @@ export default function AdminSidebar({ currentView, onNavigate, onLogout }: Admi
         })}
       </nav>
 
-      <div className="pt-10 border-t border-blue-800/50 space-y-2">
+      <div className="pt-10 border-t border-white/10 space-y-2 relative z-30">
         <button 
           onClick={handleLogout}
-          className="w-full flex items-center gap-4 px-5 py-4 rounded-[20px] text-blue-200 hover:text-rose-400 hover:bg-rose-500/10 transition-all font-bold text-sm"
+          className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-white bg-white/5 border border-white/10 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all font-bold text-sm shadow-sm"
         >
-          <LogOut className="w-5 h-5 opacity-70" />
+          <LogOut className="w-5 h-5" />
           <span className="tracking-wide">ログアウト</span>
         </button>
       </div>
