@@ -60,7 +60,28 @@ export default function ReportQueueView({ user, onNavigate, onLogout }: ReportQu
         body: JSON.stringify({ status })
       });
       if (res.ok) {
+        if (status === 'resolved') {
+          alert('通報が解決され、ユーザーに通知されました。(Báo cáo đã được giải quyết và thông báo cho người dùng.)');
+        }
         fetchReports();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleDeleteReport = async (reportId: string) => {
+    if (!confirm('この通報を完全に削除しますか？ (Bạn có chắc chắn muốn xóa hoàn toàn báo cáo này?)')) return;
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/reports/${reportId}`, {
+        method: 'DELETE',
+        headers: { 
+          Authorization: `Bearer ${token}` 
+        }
+      });
+      if (res.ok) {
+        setReports(prev => prev.filter(r => r._id !== reportId));
       }
     } catch (error) {
       console.error(error);
@@ -180,7 +201,7 @@ export default function ReportQueueView({ user, onNavigate, onLogout }: ReportQu
                                   <button onClick={() => handleUpdateStatus(report._id, 'resolved')} className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors" title="Resolve">
                                      <CheckCircle2 className="w-4 h-4" />
                                   </button>
-                                  <button onClick={() => handleUpdateStatus(report._id, 'dismissed')} className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-100 transition-colors" title="Dismiss">
+                                  <button onClick={() => handleDeleteReport(report._id)} className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-100 transition-colors" title="Delete">
                                      <Trash2 className="w-4 h-4" />
                                   </button>
                                   <button onClick={() => handleBanUser(report.reportedUser?._id)} className="p-2 bg-rose-50 text-rose-400 rounded-xl hover:bg-rose-100 hover:text-rose-600 transition-all" title="Ban User">
